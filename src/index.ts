@@ -10,17 +10,18 @@ interface SendPromptOptions {
   messages: Message[];
   model: ModelEnum;
   provider: AI_PROVIDER_TYPE;
+  apiKey: string;
 }
 
 export function sendPrompt(options: SendPromptOptions) {
-  const { messages, model, provider } = options;
+  const { messages, model, provider, apiKey } = options;
 
   if (provider !== "openai") {
     throw new Error(`Provider ${provider} is not supported yet`);
   }
 
   const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey,
   });
 
   return openai.chat.completions.create({

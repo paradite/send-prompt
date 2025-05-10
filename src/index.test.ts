@@ -16,6 +16,7 @@ describe("sendPrompt", () => {
         messages,
         model: ModelEnum["gpt-4.1"],
         provider: "openai",
+        apiKey: process.env.OPENAI_API_KEY!,
       });
 
       expect(response.choices[0].message.content).toBeTruthy();
@@ -32,6 +33,7 @@ describe("sendPrompt", () => {
         messages,
         model: ModelEnum["gpt-4.1"],
         provider: "unsupported" as any,
+        apiKey: "dummy-key",
       });
     }).rejects.toThrow("Provider unsupported is not supported yet");
   });
