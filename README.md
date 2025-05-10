@@ -14,8 +14,6 @@ npm install llm-info send-prompt
 
 ## Usage
 
-Simple usage:
-
 ```typescript
 import { sendPrompt } from "send-prompt";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
