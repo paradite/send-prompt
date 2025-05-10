@@ -144,7 +144,7 @@ export async function sendPrompt(
       if (!isTransformedOpenAI(transformed)) {
         throw new Error("Messages were not properly transformed for OpenAI");
       }
-      const openai = new OpenAI({ apiKey });
+      const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       const response = await openai.chat.completions.create({
         model,
         messages: transformed.messages,
@@ -161,7 +161,10 @@ export async function sendPrompt(
       if (!isTransformedAnthropic(transformed)) {
         throw new Error("Messages were not properly transformed for Anthropic");
       }
-      const anthropic = new Anthropic({ apiKey });
+      const anthropic = new Anthropic({
+        apiKey,
+        dangerouslyAllowBrowser: true,
+      });
       const claudeRes = await anthropic.messages.create({
         model,
         max_tokens: ModelInfoMap[model].outputTokenLimit || DEFAULT_MAX_TOKENS,
