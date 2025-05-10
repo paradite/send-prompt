@@ -1,5 +1,5 @@
 import { sendPrompt } from "./index";
-import { ModelEnum } from "llm-info";
+import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
 describe("sendPrompt", () => {
   // Skip test if OPENAI_API_KEY is not set
@@ -15,7 +15,7 @@ describe("sendPrompt", () => {
       const response = await sendPrompt({
         messages,
         model: ModelEnum["gpt-4.1"],
-        provider: "openai",
+        provider: AI_PROVIDERS.OPENAI,
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
