@@ -34,6 +34,7 @@
   "homepage": "https://github.com/paradite/send-prompt#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.50.3",
+    "@google/genai": "^0.13.0",
     "llm-info": "^1.0.44",
     "openai": "^4.98.0"
   },

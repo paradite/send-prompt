@@ -6,6 +6,7 @@ import {
 } from "llm-info";
 import { OpenAI } from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 
 const DEFAULT_MAX_TOKENS = 4096;
 
@@ -31,6 +32,11 @@ type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
 
 type AnthropicMessage = UserMessage | AssistantMessage;
 
+type GoogleMessage = {
+  role: "user" | "assistant";
+  parts: { text: string }[];
+};
+
 type TransformedOpenAIMessages = {
   provider: typeof AI_PROVIDERS.OPENAI;
   messages: OpenAIMessage[];
@@ -41,9 +47,15 @@ type TransformedAnthropicMessages = {
   messages: AnthropicMessage[];
 };
 
+type TransformedGoogleMessages = {
+  provider: typeof AI_PROVIDERS.GOOGLE;
+  messages: GoogleMessage[];
+};
+
 type TransformedMessages =
   | TransformedOpenAIMessages
-  | TransformedAnthropicMessages;
+  | TransformedAnthropicMessages
+  | TransformedGoogleMessages;
 
 type StandardizedResponse = {
   message: AssistantMessage;
@@ -87,6 +99,17 @@ function transformMessages(
         messages: anthropicMessages,
       };
     }
+    case AI_PROVIDERS.GOOGLE: {
+      // Convert messages to Gemini format
+      const googleMessages: GoogleMessage[] = messages.map((msg) => ({
+        role: msg.role,
+        parts: [{ text: msg.content }],
+      }));
+      return {
+        provider: AI_PROVIDERS.GOOGLE,
+        messages: googleMessages,
+      };
+    }
     default:
       throw new Error(`Provider ${provider} is not supported yet`);
   }
@@ -102,6 +125,12 @@ function isTransformedAnthropic(
   messages: TransformedMessages
 ): messages is TransformedAnthropicMessages {
   return messages.provider === AI_PROVIDERS.ANTHROPIC;
+}
+
+function isTransformedGoogle(
+  messages: TransformedMessages
+): messages is TransformedGoogleMessages {
+  return messages.provider === AI_PROVIDERS.GOOGLE;
 }
 
 export async function sendPrompt(
@@ -145,6 +174,28 @@ export async function sendPrompt(
           content: Array.isArray(claudeRes.content)
             ? claudeRes.content.map((c: any) => c.text).join("")
             : claudeRes.content,
+        },
+      };
+    }
+
+    case AI_PROVIDERS.GOOGLE: {
+      if (!isTransformedGoogle(transformed)) {
+        throw new Error("Messages were not properly transformed for Google");
+      }
+      const ai = new GoogleGenAI({ apiKey });
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: transformed.messages,
+        config: {
+          systemInstruction: systemPrompt,
+        },
+      });
+
+      return {
+        message: {
+          role: "assistant",
+          content: response.text || "",
         },
       };
     }
