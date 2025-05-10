@@ -20,6 +20,7 @@ const jestConfig: JestConfigWithTsJest = {
     ],
   },
   testPathIgnorePatterns: ["/reference/"],
+  verbose: true,
 };
 
 export default jestConfig;
