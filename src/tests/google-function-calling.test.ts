@@ -85,4 +85,35 @@ describe("Google Function Calling", () => {
     },
     30000
   );
+
+  googleTestFn(
+    "should not call tools when not needed in AUTO mode",
+    async () => {
+      const messages = [
+        {
+          role: "user" as const,
+          content: "What is the capital of France?",
+        },
+      ];
+
+      const response = await sendPrompt({
+        messages,
+        model: googleModel,
+        provider: AI_PROVIDERS.GOOGLE,
+        apiKey: process.env.GEMINI_API_KEY!,
+        tools: [calculatorTool],
+        toolCallMode: "AUTO",
+      });
+
+      // Should not have any tool calls
+      expect(response.tool_calls).toBeUndefined();
+
+      // Should have a direct response
+      expect(response.message.content).toBeDefined();
+      expect(response.message.content.length).toBeGreaterThan(0);
+
+      console.log("Direct response:", response.message.content);
+    },
+    30000
+  );
 });
