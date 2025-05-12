@@ -119,6 +119,7 @@ export type SendPromptOptions = {
   apiKey: string;
   systemPrompt?: string;
   tools?: FunctionDefinition[];
+  toolCallMode?: "ANY" | "AUTO";
 };
 
 export function transformMessages(
@@ -345,8 +346,14 @@ export async function sendPrompt(
           ...config,
           toolConfig: {
             functionCallingConfig: {
-              mode: FunctionCallingConfigMode.ANY,
-              allowedFunctionNames: tools.map((tool) => tool.function.name),
+              mode:
+                options.toolCallMode === "ANY"
+                  ? FunctionCallingConfigMode.ANY
+                  : FunctionCallingConfigMode.AUTO,
+              allowedFunctionNames:
+                options.toolCallMode === "ANY"
+                  ? tools.map((tool) => tool.function.name)
+                  : undefined,
             },
           },
           tools: [

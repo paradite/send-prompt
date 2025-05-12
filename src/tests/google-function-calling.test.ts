@@ -21,6 +21,7 @@ describe("Google Function Calling", () => {
         provider: AI_PROVIDERS.GOOGLE,
         apiKey: process.env.GEMINI_API_KEY!,
         tools: [calculatorTool],
+        toolCallMode: "AUTO",
       });
 
       // Check if we got a function call
@@ -57,6 +58,7 @@ describe("Google Function Calling", () => {
         provider: AI_PROVIDERS.GOOGLE,
         apiKey: process.env.GEMINI_API_KEY!,
         tools: [calculatorTool],
+        toolCallMode: "ANY",
       });
 
       expect(response.tool_calls).toBeDefined();
