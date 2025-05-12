@@ -102,6 +102,8 @@ type OpenAIChatCompletionResponse = {
   }>;
 };
 
+type AnthropicAPIResponse = Anthropic.Messages.Message;
+
 type SendPromptOptions = {
   messages: InputMessage[];
   model: ModelEnum;
@@ -201,6 +203,42 @@ function transformOpenAIResponse(
   return standardizedResponse;
 }
 
+function transformAnthropicResponse(
+  response: AnthropicAPIResponse
+): StandardizedResponse {
+  const standardizedResponse: StandardizedResponse = {
+    message: {
+      role: "assistant",
+      content:
+        response.content
+          .filter((c) => c.type === "text")
+          .map((c) => c.text)
+          .join("") || "",
+    },
+  };
+
+  const toolCalls = response.content
+    .filter((c) => c.type === "tool_use")
+    .map((c) => ({
+      id: c.id,
+      type: "function" as const,
+      function: {
+        name: c.name,
+        arguments: JSON.stringify(
+          c.input && typeof c.input === "object" && !Array.isArray(c.input)
+            ? (c.input as Record<string, any>)
+            : {}
+        ),
+      },
+    }));
+
+  if (toolCalls.length > 0) {
+    standardizedResponse.tool_calls = toolCalls;
+  }
+
+  return standardizedResponse;
+}
+
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
@@ -238,15 +276,13 @@ export async function sendPrompt(
         max_tokens: ModelInfoMap[model].outputTokenLimit || DEFAULT_MAX_TOKENS,
         system: systemPrompt,
         messages: transformed.messages,
+        tools: tools?.map((tool) => ({
+          name: tool.function.name,
+          description: tool.function.description,
+          input_schema: tool.function.parameters,
+        })),
       });
-      return {
-        message: {
-          role: "assistant",
-          content: Array.isArray(claudeRes.content)
-            ? claudeRes.content.map((c: any) => c.text).join("")
-            : claudeRes.content,
-        },
-      };
+      return transformAnthropicResponse(claudeRes);
     }
 
     case AI_PROVIDERS.GOOGLE: {
