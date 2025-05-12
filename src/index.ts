@@ -19,30 +19,30 @@ type BaseMessage = {
   content: string;
 };
 
-type UserMessage = BaseMessage & {
+export type UserMessage = BaseMessage & {
   role: "user";
 };
 
-type AssistantMessage = BaseMessage & {
+export type AssistantMessage = BaseMessage & {
   role: "assistant";
 };
 
-type DeveloperMessage = BaseMessage & {
+export type DeveloperMessage = BaseMessage & {
   role: "developer";
 };
 
-type InputMessage = UserMessage | AssistantMessage;
+export type InputMessage = UserMessage | AssistantMessage;
 
-type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
+export type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
 
-type AnthropicMessage = UserMessage | AssistantMessage;
+export type AnthropicMessage = UserMessage | AssistantMessage;
 
-type GoogleMessage = {
+export type GoogleMessage = {
   role: "user" | "assistant";
   parts: { text: string }[];
 };
 
-type FunctionCall = {
+export type FunctionCall = {
   id: string;
   type: "function";
   function: {
@@ -86,12 +86,12 @@ type TransformedMessages =
   | TransformedAnthropicMessages
   | TransformedGoogleMessages;
 
-type StandardizedResponse = {
+export type StandardizedResponse = {
   message: AssistantMessage;
   tool_calls?: FunctionCall[];
 };
 
-type OpenAIChatCompletionResponse = {
+export type OpenAIChatCompletionResponse = {
   choices: Array<{
     message: {
       content: string | null;
@@ -107,9 +107,9 @@ type OpenAIChatCompletionResponse = {
   }>;
 };
 
-type AnthropicAPIResponse = Anthropic.Messages.Message;
+export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
-type SendPromptOptions = {
+export type SendPromptOptions = {
   messages: InputMessage[];
   model: ModelEnum;
   provider: AI_PROVIDER_TYPE;
@@ -118,7 +118,7 @@ type SendPromptOptions = {
   tools?: FunctionDefinition[];
 };
 
-function transformMessages(
+export function transformMessages(
   messages: InputMessage[],
   provider: AI_PROVIDER_TYPE,
   systemPrompt?: string
