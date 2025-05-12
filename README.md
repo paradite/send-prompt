@@ -6,6 +6,20 @@ A lightweight library to send prompt to models, developed by [16x Prompt](https:
 
 The library uses [llm-info](https://www.npmjs.com/package/llm-info) for model and provider information.
 
+## Features
+
+- 🔄 Unified interface with single entry point for all providers
+- 🤖 Support for multiple AI providers:
+  - OpenAI (GPT-4.1)
+  - Anthropic (Claude 3.7 Sonnet)
+  - Google (Gemini 2.5 Pro)
+- 🔧 Function calling support for all providers
+- 💬 Standardized message format across providers
+- 🛠️ Tool definitions with TypeScript support
+- 🔒 Browser-safe with proper API key handling
+- 📝 System prompt support
+- 🎯 Consistent response format
+
 ## Installation
 
 ```bash
@@ -14,49 +28,71 @@ npm install llm-info send-prompt
 
 ## Usage
 
+### Basic Usage
+
+The same function `sendPrompt` works across all providers:
+
 ```typescript
 import { sendPrompt } from "send-prompt";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
-const response = await sendPrompt({
+// OpenAI
+const openaiResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
   model: ModelEnum["gpt-4.1"],
   provider: AI_PROVIDERS.OPENAI,
-  apiKey: "your-api-key-here",
-});
-
-console.log(response.message.content);
-```
-
-System message:
-
-```typescript
-import { sendPrompt } from "send-prompt";
-import { ModelEnum, AI_PROVIDERS } from "llm-info";
-
-const response2 = await sendPrompt({
-  messages: [{ role: "user", content: "What is the capital of France?" }],
-  model: ModelEnum["gpt-4.1"],
-  provider: AI_PROVIDERS.OPENAI,
-  apiKey: "your-api-key-here",
+  apiKey: "your-openai-api-key",
   systemPrompt: "You are a helpful assistant.",
 });
 
-console.log(response2.message.content);
-```
+// Anthropic
+const anthropicResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: ModelEnum["claude-3-7-sonnet-20250219"],
+  provider: AI_PROVIDERS.ANTHROPIC,
+  apiKey: "your-anthropic-api-key",
+  systemPrompt: "You are a helpful assistant.",
+});
 
-Google Gemini:
-
-```typescript
-import { sendPrompt } from "send-prompt";
-import { ModelEnum, AI_PROVIDERS } from "llm-info";
-
-const response3 = await sendPrompt({
+// Google
+const googleResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
   model: ModelEnum["gemini-2.5-pro-exp-03-25"],
   provider: AI_PROVIDERS.GOOGLE,
-  apiKey: "your-google-api-key-here",
+  apiKey: "your-google-api-key",
+  systemPrompt: "You are a helpful assistant.",
 });
 
-console.log(response3.message.content);
+// All responses have the same structure
+console.log(openaiResponse.message.content);
+console.log(anthropicResponse.message.content);
+console.log(googleResponse.message.content);
+```
+
+### Function Calling
+
+```typescript
+// Define your tool
+const calculatorTool = {
+  type: "function",
+  function: {
+    name: "calculator",
+    description: "Perform basic arithmetic operations",
+    //
+};
+
+const openaiResponse = await sendPrompt({
+  messages: [{ role: "user", content: "What is 5 plus 3?" }],
+  model: ModelEnum["gemini-2.5-flash-preview-04-17"],
+  provider: AI_PROVIDERS.GOOGLE,
+  apiKey: "your-google-api-key",
+  tools: [calculatorTool],
+});
+
+// All responses have the same structure for tool calls
+if (openaiResponse.tool_calls) {
+  const toolCall = openaiResponse.tool_calls[0];
+  console.log("Tool called:", toolCall.function.name);
+  console.log("Arguments:", JSON.parse(toolCall.function.arguments));
+}
 ```
