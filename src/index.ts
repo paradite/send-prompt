@@ -37,6 +37,30 @@ type GoogleMessage = {
   parts: { text: string }[];
 };
 
+type FunctionCall = {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+};
+
+export type FunctionDefinition = {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, any>;
+      required: string[];
+      additionalProperties?: boolean;
+    };
+    strict?: boolean;
+  };
+};
+
 type TransformedOpenAIMessages = {
   provider: typeof AI_PROVIDERS.OPENAI;
   messages: OpenAIMessage[];
@@ -59,6 +83,23 @@ type TransformedMessages =
 
 type StandardizedResponse = {
   message: AssistantMessage;
+  tool_calls?: FunctionCall[];
+};
+
+type OpenAIChatCompletionResponse = {
+  choices: Array<{
+    message: {
+      content: string | null;
+      tool_calls?: Array<{
+        id: string;
+        type: "function";
+        function: {
+          name: string;
+          arguments: string;
+        };
+      }>;
+    };
+  }>;
 };
 
 type SendPromptOptions = {
@@ -67,6 +108,7 @@ type SendPromptOptions = {
   provider: AI_PROVIDER_TYPE;
   apiKey: string;
   systemPrompt?: string;
+  tools?: FunctionDefinition[];
 };
 
 function transformMessages(
@@ -133,10 +175,36 @@ function isTransformedGoogle(
   return messages.provider === AI_PROVIDERS.GOOGLE;
 }
 
+function transformOpenAIResponse(
+  response: OpenAIChatCompletionResponse
+): StandardizedResponse {
+  const message = response.choices[0].message;
+
+  const standardizedResponse: StandardizedResponse = {
+    message: {
+      role: "assistant",
+      content: message.content || "",
+    },
+  };
+
+  if (message.tool_calls && message.tool_calls.length > 0) {
+    standardizedResponse.tool_calls = message.tool_calls.map((tool) => ({
+      id: tool.id,
+      type: tool.type,
+      function: {
+        name: tool.function.name,
+        arguments: tool.function.arguments,
+      },
+    }));
+  }
+
+  return standardizedResponse;
+}
+
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
-  const { messages, model, provider, apiKey, systemPrompt } = options;
+  const { messages, model, provider, apiKey, systemPrompt, tools } = options;
   const transformed = transformMessages(messages, provider, systemPrompt);
 
   switch (provider) {
@@ -148,13 +216,13 @@ export async function sendPrompt(
       const response = await openai.chat.completions.create({
         model,
         messages: transformed.messages,
+        tools: tools?.map((tool: FunctionDefinition) => ({
+          type: tool.type,
+          function: tool.function,
+        })),
       });
-      return {
-        message: {
-          role: "assistant",
-          content: response.choices[0].message.content || "",
-        },
-      };
+
+      return transformOpenAIResponse(response);
     }
 
     case AI_PROVIDERS.ANTHROPIC: {
