@@ -6,7 +6,12 @@ import {
 } from "llm-info";
 import { OpenAI } from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import { GoogleGenAI } from "@google/genai";
+import {
+  GoogleGenAI,
+  FunctionCallingConfigMode,
+  GenerateContentResponse,
+  FunctionCall as GoogleFunctionCall,
+} from "@google/genai";
 
 const DEFAULT_MAX_TOKENS = 4096;
 
@@ -239,6 +244,33 @@ function transformAnthropicResponse(
   return standardizedResponse;
 }
 
+function transformGoogleResponse(
+  response: GenerateContentResponse
+): StandardizedResponse {
+  let tool_calls: FunctionCall[] | undefined = undefined;
+  if (response.functionCalls && Array.isArray(response.functionCalls)) {
+    tool_calls = response.functionCalls.map((call: GoogleFunctionCall) => ({
+      id: call.id || "function_call",
+      type: "function",
+      function: {
+        name: call.name || "function_call",
+        arguments:
+          typeof call.args === "string"
+            ? call.args
+            : JSON.stringify(call.args || {}),
+      },
+    }));
+  }
+
+  return {
+    message: {
+      role: "assistant",
+      content: response.text || "",
+    },
+    ...(tool_calls ? { tool_calls } : {}),
+  };
+}
+
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
@@ -291,20 +323,39 @@ export async function sendPrompt(
       }
       const ai = new GoogleGenAI({ apiKey });
 
+      // Prepare config for function calling if tools are provided
+      let config: any = { systemInstruction: systemPrompt };
+      if (tools && tools.length > 0) {
+        config = {
+          ...config,
+          toolConfig: {
+            functionCallingConfig: {
+              mode: FunctionCallingConfigMode.ANY,
+              allowedFunctionNames: tools.map((tool) => tool.function.name),
+            },
+          },
+          tools: [
+            {
+              functionDeclarations: tools.map((tool) => ({
+                name: tool.function.name,
+                description: tool.function.description,
+                parameters: {
+                  ...tool.function.parameters,
+                  additionalProperties: undefined,
+                },
+              })),
+            },
+          ],
+        };
+      }
+
       const response = await ai.models.generateContent({
         model,
         contents: transformed.messages,
-        config: {
-          systemInstruction: systemPrompt,
-        },
+        config,
       });
 
-      return {
-        message: {
-          role: "assistant",
-          content: response.text || "",
-        },
-      };
+      return transformGoogleResponse(response);
     }
 
     default:
