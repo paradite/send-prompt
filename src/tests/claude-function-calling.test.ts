@@ -2,7 +2,7 @@ import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 import { calculatorTool } from "./shared/tools";
 
-const claudeModel = ModelEnum["claude-3-5-sonnet-20241022"];
+const claudeModel = ModelEnum["claude-3-7-sonnet-20250219"];
 
 describe("Claude Function Calling", () => {
   // Skip test if ANTHROPIC_API_KEY is not set
@@ -49,7 +49,7 @@ describe("Claude Function Calling", () => {
     30000
   );
 
-  // Claude is not able to handle multiple function calls in one query
+  // Claude is not able to handle multiple function calls to the same tool in one query
   claudeTestFn.skip(
     "should handle multiple operations in one query",
     async () => {

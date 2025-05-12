@@ -303,9 +303,20 @@ export async function sendPrompt(
         apiKey,
         dangerouslyAllowBrowser: true,
       });
-      const claudeRes = await anthropic.messages.create({
+      let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
+      if (model === ModelEnum["claude-3-7-sonnet-20250219"]) {
+        // use token-efficient-tools-2025-02-19 beta for claude-3-7-sonnet-20250219
+        betas = ["token-efficient-tools-2025-02-19"];
+      }
+      let maxTokens =
+        ModelInfoMap[model].outputTokenLimit || DEFAULT_MAX_TOKENS;
+      if (tools && tools.length > 0) {
+        // limit max tokens to default max tokens for function calling
+        maxTokens = DEFAULT_MAX_TOKENS;
+      }
+      const claudeRes = await anthropic.beta.messages.create({
         model,
-        max_tokens: ModelInfoMap[model].outputTokenLimit || DEFAULT_MAX_TOKENS,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages: transformed.messages,
         tools: tools?.map((tool) => ({
@@ -313,6 +324,7 @@ export async function sendPrompt(
           description: tool.function.description,
           input_schema: tool.function.parameters,
         })),
+        betas,
       });
       return transformAnthropicResponse(claudeRes);
     }
