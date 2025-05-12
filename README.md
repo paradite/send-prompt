@@ -77,21 +77,56 @@ const calculatorTool = {
   type: "function",
   function: {
     name: "calculator",
-    description: "Perform basic arithmetic operations",
-    //
+    description: "Perform basic arithmetic calculations",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: {
+          type: "string",
+          enum: ["add", "subtract", "multiply", "divide"],
+          description: "The arithmetic operation to perform",
+        },
+        a: {
+          type: "number",
+          description: "First number",
+        },
+        b: {
+          type: "number",
+          description: "Second number",
+        },
+      },
+      required: ["operation", "a", "b"],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
 };
 
-const openaiResponse = await sendPrompt({
+const response = await sendPrompt({
   messages: [{ role: "user", content: "What is 5 plus 3?" }],
-  model: ModelEnum["gemini-2.5-flash-preview-04-17"],
-  provider: AI_PROVIDERS.GOOGLE,
-  apiKey: "your-google-api-key",
+  model: ModelEnum["gpt-4.1"],
+  provider: AI_PROVIDERS.OPENAI,
+  apiKey: "your-openai-api-key",
   tools: [calculatorTool],
 });
 
-// All responses have the same structure for tool calls
-if (openaiResponse.tool_calls) {
-  const toolCall = openaiResponse.tool_calls[0];
+// Expected response structure:
+// {
+//   tool_calls: [
+//     {
+//       id: "call_123",
+//       type: "function",
+//       function: {
+//         name: "calculator",
+//         arguments: '{"operation":"add","a":5,"b":3}'
+//       }
+//     }
+//   ]
+// }
+
+// Handle the function call
+if (response.tool_calls) {
+  const toolCall = response.tool_calls[0];
   console.log("Tool called:", toolCall.function.name);
   console.log("Arguments:", JSON.parse(toolCall.function.arguments));
 }
