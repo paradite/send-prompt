@@ -1,7 +1,7 @@
 import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
-const googleModel = ModelEnum["gemini-2.5-flash-preview-04-17"];
+const googleModel = ModelEnum["gemini-2.5-pro-exp-03-25"];
 
 describe("Google Provider", () => {
   // Skip test if GEMINI_API_KEY is not set
@@ -41,6 +41,31 @@ describe("Google Provider", () => {
         "Google System Prompt Response:",
         systemPromptResponse.message.content
       );
+    },
+    30000
+  );
+
+  googleTestFn(
+    "should handle role transformation correctly",
+    async () => {
+      const messages = [
+        { role: "user" as const, content: "Hello" },
+        { role: "assistant" as const, content: "Hi there!" },
+        { role: "user" as const, content: "What role are you using?" },
+      ];
+
+      const response = await sendPrompt({
+        messages,
+        model: googleModel,
+        provider: AI_PROVIDERS.GOOGLE,
+        apiKey: process.env.GEMINI_API_KEY!,
+        systemPrompt:
+          "You are a helpful assistant. When asked about your role, respond with 'I am using the model role'",
+      });
+
+      expect(response.message.role).toBe("assistant");
+      expect(response.message.content).toContain("I am using the model role");
+      console.log("Role Test Response:", response.message.content);
     },
     30000
   );

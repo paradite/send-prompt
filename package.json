@@ -1,6 +1,6 @@
 {
   "name": "send-prompt",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A lightweight library to send prompt to models",
   "main": "dist/index.js",
   "type": "module",

@@ -38,7 +38,7 @@ export type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
 export type AnthropicMessage = UserMessage | AssistantMessage;
 
 export type GoogleMessage = {
-  role: "user" | "assistant";
+  role: "user" | "model";
   parts: { text: string }[];
 };
 
@@ -87,7 +87,10 @@ type TransformedMessages =
   | TransformedGoogleMessages;
 
 export type StandardizedResponse = {
-  message: AssistantMessage;
+  message: {
+    role: "assistant";
+    content: string;
+  };
   tool_calls?: FunctionCall[];
 };
 
@@ -151,7 +154,7 @@ export function transformMessages(
     case AI_PROVIDERS.GOOGLE: {
       // Convert messages to Gemini format
       const googleMessages: GoogleMessage[] = messages.map((msg) => ({
-        role: msg.role,
+        role: msg.role === "assistant" ? "model" : msg.role,
         parts: [{ text: msg.content }],
       }));
       return {
