@@ -117,7 +117,7 @@ describe("Google Function Calling", () => {
     30000
   );
 
-  googleTestFn.only(
+  googleTestFn(
     "should handle multi-round function calling with simulated responses",
     async () => {
       const messages = [
