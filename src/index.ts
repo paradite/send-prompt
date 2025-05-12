@@ -11,6 +11,7 @@ import {
   FunctionCallingConfigMode,
   GenerateContentResponse,
   FunctionCall as GoogleFunctionCall,
+  FunctionResponse as GoogleFunctionResponse,
 } from "@google/genai";
 
 const DEFAULT_MAX_TOKENS = 4096;
@@ -31,7 +32,27 @@ export type DeveloperMessage = BaseMessage & {
   role: "developer";
 };
 
-export type InputMessage = UserMessage | AssistantMessage;
+// https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
+export type GoogleFunctionCallMessage = {
+  role: "google_function_call";
+  args: Record<string, unknown>;
+  id: string;
+  name: string;
+};
+
+// https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
+export type GoogleFunctionResponseMessage = {
+  role: "google_function_response";
+  id: string;
+  name: string;
+  response: Record<string, unknown>;
+};
+
+export type InputMessage =
+  | UserMessage
+  | AssistantMessage
+  | GoogleFunctionCallMessage
+  | GoogleFunctionResponseMessage;
 
 export type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
 
@@ -39,7 +60,11 @@ export type AnthropicMessage = UserMessage | AssistantMessage;
 
 export type GoogleMessage = {
   role: "user" | "model";
-  parts: { text: string }[];
+  parts: (
+    | { text: string }
+    | { functionCall: GoogleFunctionCall }
+    | { functionResponse: GoogleFunctionResponse }
+  )[];
 };
 
 export type FunctionCall = {
@@ -129,9 +154,15 @@ export function transformMessages(
 ): TransformedMessages {
   switch (provider) {
     case AI_PROVIDERS.OPENAI: {
-      const openaiMessages: OpenAIMessage[] = messages.map(
-        ({ role, content }) => ({ role, content })
-      );
+      const openaiMessages: OpenAIMessage[] = messages
+        .filter(
+          (msg) =>
+            msg.role !== "google_function_call" &&
+            msg.role !== "google_function_response"
+        )
+        .map(({ role, content }) => {
+          return { role, content };
+        });
       if (systemPrompt) {
         openaiMessages.unshift({
           role: "developer",
@@ -144,9 +175,15 @@ export function transformMessages(
       };
     }
     case AI_PROVIDERS.ANTHROPIC: {
-      const anthropicMessages: AnthropicMessage[] = messages.map(
-        ({ role, content }) => ({ role, content })
-      );
+      const anthropicMessages: AnthropicMessage[] = messages
+        .filter(
+          (msg) =>
+            msg.role !== "google_function_call" &&
+            msg.role !== "google_function_response"
+        )
+        .map(({ role, content }) => {
+          return { role, content };
+        });
       return {
         provider: AI_PROVIDERS.ANTHROPIC,
         messages: anthropicMessages,
@@ -154,10 +191,29 @@ export function transformMessages(
     }
     case AI_PROVIDERS.GOOGLE: {
       // Convert messages to Gemini format
-      const googleMessages: GoogleMessage[] = messages.map((msg) => ({
-        role: msg.role === "assistant" ? "model" : msg.role,
-        parts: [{ text: msg.content }],
-      }));
+      const googleMessages: GoogleMessage[] = messages.map((msg) => {
+        if (msg.role === "google_function_call") {
+          // https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
+          const functionCall: GoogleFunctionCall = {
+            id: msg.id,
+            args: msg.args,
+            name: msg.name,
+          };
+          return { role: "model", parts: [{ functionCall }] };
+        } else if (msg.role === "google_function_response") {
+          // https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
+          const functionResponse: GoogleFunctionResponse = {
+            id: msg.id,
+            name: msg.name,
+            response: msg.response,
+          };
+          return { role: "user", parts: [{ functionResponse }] };
+        }
+        return {
+          role: msg.role === "assistant" ? "model" : msg.role,
+          parts: [{ text: msg.content }],
+        };
+      });
       return {
         provider: AI_PROVIDERS.GOOGLE,
         messages: googleMessages,
@@ -370,6 +426,11 @@ export async function sendPrompt(
           ],
         };
       }
+
+      console.log("transformed");
+      console.log(JSON.stringify(transformed.messages, null, 2));
+      console.log("config");
+      console.log(JSON.stringify(config, null, 2));
 
       const response = await ai.models.generateContent({
         model,

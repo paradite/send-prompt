@@ -116,4 +116,51 @@ describe("Google Function Calling", () => {
     },
     30000
   );
+
+  googleTestFn.only(
+    "should handle multi-round function calling with simulated responses",
+    async () => {
+      const messages = [
+        { role: "user" as const, content: "What is 5 plus 3?" },
+        {
+          role: "google_function_call" as const,
+          id: "calc_1",
+          name: "calculator",
+          args: {
+            operation: "add",
+            a: 5,
+            b: 3,
+          },
+        },
+        {
+          role: "google_function_response" as const,
+          id: "calc_1",
+          name: "calculator",
+          response: {
+            result: 8,
+          },
+        },
+      ];
+
+      const response = await sendPrompt({
+        messages,
+        model: googleModel,
+        provider: AI_PROVIDERS.GOOGLE,
+        apiKey: process.env.GEMINI_API_KEY!,
+        tools: [calculatorTool],
+        toolCallMode: "AUTO",
+      });
+
+      // Should not have any tool calls since we already provided the result
+      expect(response.tool_calls).toBeUndefined();
+
+      // Should have a response that acknowledges the calculation result
+      expect(response.message.content).toBeDefined();
+      expect(response.message.content.length).toBeGreaterThan(0);
+      expect(response.message.content.toLowerCase()).toContain("8");
+
+      console.log("Multi-round response:", response.message.content);
+    },
+    30000
+  );
 });
