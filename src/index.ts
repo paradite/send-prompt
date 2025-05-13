@@ -1,6 +1,5 @@
 import {
   ModelEnum,
-  AI_PROVIDER_TYPE,
   AI_PROVIDERS,
   ModelInfoMap,
   AI_PROVIDER_CONFIG,
@@ -33,6 +32,10 @@ export type DeveloperMessage = BaseMessage & {
   role: "developer";
 };
 
+export type SystemMessage = BaseMessage & {
+  role: "system";
+};
+
 // https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
 export type GoogleFunctionCallMessage = {
   role: "google_function_call";
@@ -55,7 +58,11 @@ export type InputMessage =
   | GoogleFunctionCallMessage
   | GoogleFunctionResponseMessage;
 
-export type OpenAIMessage = UserMessage | AssistantMessage | DeveloperMessage;
+export type OpenAIMessage =
+  | UserMessage
+  | AssistantMessage
+  | DeveloperMessage
+  | SystemMessage;
 
 export type AnthropicMessage = UserMessage | AssistantMessage;
 
@@ -170,15 +177,23 @@ export type SendPromptOptions =
   | BuiltInBaseURLProviderOptions
   | CustomProviderOptions;
 
-export function transformMessagesForProvider(
-  messages: InputMessage[],
-  provider: AI_PROVIDER_TYPE,
-  systemPrompt?: string
-): TransformedMessages {
+export type TransformSupportedProvider =
+  | typeof AI_PROVIDERS.OPENAI
+  | typeof AI_PROVIDERS.ANTHROPIC
+  | typeof AI_PROVIDERS.GOOGLE;
+
+export function transformMessagesForProvider({
+  messages,
+  provider,
+  systemPrompt,
+  systemRole,
+}: {
+  messages: InputMessage[];
+  provider: TransformSupportedProvider;
+  systemPrompt: string | undefined;
+  systemRole: "system" | "developer";
+}): TransformedMessages {
   switch (provider) {
-    case AI_PROVIDERS.OPENROUTER:
-    case AI_PROVIDERS.FIREWORKS:
-    case AI_PROVIDERS.DEEPSEEK:
     case AI_PROVIDERS.OPENAI: {
       const openaiMessages: OpenAIMessage[] = messages
         .filter(
@@ -191,7 +206,7 @@ export function transformMessagesForProvider(
         });
       if (systemPrompt) {
         openaiMessages.unshift({
-          role: "developer",
+          role: systemRole,
           content: systemPrompt,
         });
       }
@@ -244,9 +259,6 @@ export function transformMessagesForProvider(
         provider: AI_PROVIDERS.GOOGLE,
         messages: googleMessages,
       };
-    }
-    case AI_PROVIDERS.AZURE_OPENAI: {
-      throw new Error("Azure OpenAI is not supported yet");
     }
     default: {
       const exhaustiveCheck: never = provider;
@@ -366,18 +378,30 @@ export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
   const { messages, apiKey, systemPrompt, tools } = options;
-  let providerToTransform: AI_PROVIDER_TYPE;
-  if (options.provider === "custom") {
-    // transform to openai by default for custom providers
+  let providerToTransform: TransformSupportedProvider;
+  let systemRole: "system" | "developer" = "developer";
+  if (options.provider === AI_PROVIDERS.OPENAI) {
     providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "developer";
+  } else if (options.provider === AI_PROVIDERS.FIREWORKS) {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
+  } else if (options.provider === AI_PROVIDERS.OPENROUTER) {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
+  } else if (options.provider === "custom") {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
   } else {
     providerToTransform = options.provider;
+    systemRole = "system";
   }
-  const transformed = transformMessagesForProvider(
+  const transformed = transformMessagesForProvider({
     messages,
-    providerToTransform,
-    systemPrompt
-  );
+    provider: providerToTransform,
+    systemPrompt,
+    systemRole,
+  });
 
   switch (options.provider) {
     case AI_PROVIDERS.OPENAI: {
@@ -487,7 +511,7 @@ export async function sendPrompt(
       }
       const openai = new OpenAI({
         apiKey,
-        baseURL: AI_PROVIDER_CONFIG[providerToTransform].baseURL,
+        baseURL: AI_PROVIDER_CONFIG[options.provider].baseURL,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
