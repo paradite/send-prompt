@@ -8,22 +8,42 @@ The library uses [llm-info](https://www.npmjs.com/package/llm-info) for model an
 
 ## Features
 
-- 🔄 Unified interface with single entry point for all providers
-- 🤖 Support for multiple AI providers:
-  - OpenAI (GPT-4.1)
-  - Anthropic (Claude 3.7 Sonnet)
-  - Google (Gemini 2.5 Pro)
-- 🔧 Function calling support for all providers
-- 💬 Standardized message format across providers
-- 🛠️ Tool definitions with TypeScript support
-- 🔒 Browser-safe with proper API key handling
-- 📝 System prompt support
-- 🎯 Consistent response format
+- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google)
+- 🤖 Support for latest models (GPT-4.1, Claude 3.7 Sonnet, Gemini 2.5 Pro)
+- 🔧 Supports function calling and system prompt
+- 📝 Standardized message format and response structure
+- 🛠️ Full TypeScript support for type safety
+
+## Quick Demo
+
+```typescript
+import { sendPrompt } from "send-prompt";
+import { AI_PROVIDERS, ModelEnum } from "llm-info";
+
+const response = await sendPrompt({
+  messages: [
+    { role: "user", content: "What's the weather like in Singapore?" },
+  ],
+  model: ModelEnum["gpt-4.1"],
+  // model: ModelEnum["claude-3-7-sonnet-20250219"],
+  // model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+  provider: AI_PROVIDERS.OPENAI,
+  // provider: AI_PROVIDERS.ANTHROPIC,
+  // provider: AI_PROVIDERS.GOOGLE,
+  apiKey: process.env.API_KEY,
+  tools: [weatherTool],
+});
+
+console.log(response.message.content);
+```
 
 ## Installation
 
 ```bash
-npm install llm-info send-prompt
+# Install llm-info to get the model and provider information
+npm install llm-info
+# Install send-prompt to send prompt to models
+npm install send-prompt
 ```
 
 ## Usage
