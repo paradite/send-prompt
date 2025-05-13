@@ -160,9 +160,9 @@ type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
 };
 
 type CustomProviderOptions = BaseSendPromptOptions & {
-  provider: string;
+  provider: "custom";
   baseURL: string;
-  model: string;
+  customModel: string;
 };
 
 export type SendPromptOptions =
@@ -170,38 +170,15 @@ export type SendPromptOptions =
   | BuiltInBaseURLProviderOptions
   | CustomProviderOptions;
 
-export function transformMessages(
+export function transformMessagesForProvider(
   messages: InputMessage[],
-  provider: AI_PROVIDER_TYPE | string,
+  provider: AI_PROVIDER_TYPE,
   systemPrompt?: string
 ): TransformedMessages {
-  // For custom providers, treat them as OpenAI-compatible
-  if (
-    typeof provider === "string" &&
-    !Object.values(AI_PROVIDERS).includes(provider as AI_PROVIDER_TYPE)
-  ) {
-    const openaiMessages: OpenAIMessage[] = messages
-      .filter(
-        (msg) =>
-          msg.role !== "google_function_call" &&
-          msg.role !== "google_function_response"
-      )
-      .map(({ role, content }) => {
-        return { role, content };
-      });
-    if (systemPrompt) {
-      openaiMessages.unshift({
-        role: "developer",
-        content: systemPrompt,
-      });
-    }
-    return {
-      provider: AI_PROVIDERS.OPENAI,
-      messages: openaiMessages,
-    };
-  }
-
   switch (provider) {
+    case AI_PROVIDERS.OPENROUTER:
+    case AI_PROVIDERS.FIREWORKS:
+    case AI_PROVIDERS.DEEPSEEK:
     case AI_PROVIDERS.OPENAI: {
       const openaiMessages: OpenAIMessage[] = messages
         .filter(
@@ -268,8 +245,13 @@ export function transformMessages(
         messages: googleMessages,
       };
     }
-    default:
-      throw new Error(`Provider ${provider} is not supported yet`);
+    case AI_PROVIDERS.AZURE_OPENAI: {
+      throw new Error("Azure OpenAI is not supported yet");
+    }
+    default: {
+      const exhaustiveCheck: never = provider;
+      throw new Error(`Unhandled provider case: ${exhaustiveCheck}`);
+    }
   }
 }
 
@@ -383,10 +365,17 @@ function transformGoogleResponse(
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
-  const { messages, apiKey, model, systemPrompt, tools } = options;
-  const transformed = transformMessages(
+  const { messages, apiKey, systemPrompt, tools } = options;
+  let providerToTransform: AI_PROVIDER_TYPE;
+  if (options.provider === "custom") {
+    // transform to openai by default for custom providers
+    providerToTransform = AI_PROVIDERS.OPENAI;
+  } else {
+    providerToTransform = options.provider;
+  }
+  const transformed = transformMessagesForProvider(
     messages,
-    options.provider,
+    providerToTransform,
     systemPrompt
   );
 
@@ -397,7 +386,7 @@ export async function sendPrompt(
       }
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       const response = await openai.chat.completions.create({
-        model: model,
+        model: options.model,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -417,18 +406,18 @@ export async function sendPrompt(
         dangerouslyAllowBrowser: true,
       });
       let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
-      if (model === ModelEnum["claude-3-7-sonnet-20250219"]) {
+      if (options.model === ModelEnum["claude-3-7-sonnet-20250219"]) {
         // use token-efficient-tools-2025-02-19 beta for claude-3-7-sonnet-20250219
         betas = ["token-efficient-tools-2025-02-19"];
       }
       let maxTokens =
-        ModelInfoMap[model].outputTokenLimit || DEFAULT_MAX_TOKENS;
+        ModelInfoMap[options.model].outputTokenLimit || DEFAULT_MAX_TOKENS;
       if (tools && tools.length > 0) {
         // limit max tokens to default max tokens for function calling
         maxTokens = DEFAULT_MAX_TOKENS;
       }
       const claudeRes = await anthropic.beta.messages.create({
-        model,
+        model: options.model,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: transformed.messages,
@@ -481,7 +470,7 @@ export async function sendPrompt(
       }
 
       const response = await ai.models.generateContent({
-        model,
+        model: options.model,
         contents: transformed.messages,
         config,
       });
@@ -498,11 +487,11 @@ export async function sendPrompt(
       }
       const openai = new OpenAI({
         apiKey,
-        baseURL: AI_PROVIDER_CONFIG[provider].baseURL,
+        baseURL: AI_PROVIDER_CONFIG[providerToTransform].baseURL,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model,
+        model: options.model,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -510,10 +499,22 @@ export async function sendPrompt(
         })),
       });
 
+      // TODO: Handle OpenRouter response errors
+      // {
+      //   error: {
+      //     message: 'Provider returned error',
+      //     code: 429,
+      //     metadata: {
+      //       raw: 'google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream; please retry shortly.',
+      //       provider_name: 'Google AI Studio'
+      //     }
+      //   },
+      //   user_id: 'user_xyz'
+      // }
       return transformOpenAIResponse(response);
     }
 
-    default: {
+    case "custom": {
       // Handle custom providers
       if (!isTransformedOpenAI(transformed)) {
         throw new Error(
@@ -522,11 +523,11 @@ export async function sendPrompt(
       }
       const openai = new OpenAI({
         apiKey,
-        baseURL: (options as CustomProviderOptions).baseURL,
+        baseURL: options.baseURL,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model,
+        model: options.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,

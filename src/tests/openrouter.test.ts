@@ -1,7 +1,10 @@
 import { sendPrompt } from "../index";
 import { AI_PROVIDERS } from "llm-info";
 
-const openRouterModel = "deepseek/deepseek-chat-v3-0324:free";
+// const openRouterModel = "deepseek/deepseek-chat-v3-0324:free";
+// const openRouterModel = "google/gemini-2.0-flash-exp:free";
+// const openRouterModel = "deepseek/deepseek-chat:free";
+const openRouterModel = "meta-llama/llama-4-scout:free";
 
 describe("OpenRouter Provider", () => {
   // Skip test if OPENROUTER_API_KEY is not set
@@ -33,6 +36,8 @@ describe("OpenRouter Provider", () => {
         systemPrompt:
           "You are a helpful assistant that always responds with 'I am an OpenRouter assistant'",
       });
+
+      console.log(systemPromptResponse);
 
       expect(systemPromptResponse.message.content).toContain(
         "I am an OpenRouter assistant"

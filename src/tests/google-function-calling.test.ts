@@ -2,7 +2,8 @@ import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 import { calculatorTool } from "./shared/tools";
 
-const googleModel = ModelEnum["gemini-2.5-pro-exp-03-25"];
+// const googleModel = ModelEnum["gemini-2.5-pro-exp-03-25"];
+const googleModel = ModelEnum["gemini-2.5-pro-preview-05-06"];
 
 describe("Google Function Calling", () => {
   // Skip test if GEMINI_API_KEY is not set

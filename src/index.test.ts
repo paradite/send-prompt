@@ -12,6 +12,6 @@ describe("sendPrompt", () => {
         provider: "unsupported" as any,
         apiKey: "dummy-key",
       });
-    }).rejects.toThrow("Provider unsupported is not supported yet");
+    }).rejects.toThrow("Unhandled provider case: unsupported");
   });
 });
