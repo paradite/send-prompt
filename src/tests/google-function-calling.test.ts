@@ -121,15 +121,15 @@ describe("Google Function Calling", () => {
     "should handle multi-round function calling with simulated responses",
     async () => {
       const messages = [
-        { role: "user" as const, content: "What is 5 plus 3?" },
+        { role: "user" as const, content: "What is 15 plus 32?" },
         {
           role: "google_function_call" as const,
           id: "calc_1",
           name: "calculator",
           args: {
             operation: "add",
-            a: 5,
-            b: 3,
+            a: 15,
+            b: 32,
           },
         },
         {
@@ -137,7 +137,7 @@ describe("Google Function Calling", () => {
           id: "calc_1",
           name: "calculator",
           response: {
-            result: 8,
+            result: 47,
           },
         },
       ];
@@ -157,9 +157,57 @@ describe("Google Function Calling", () => {
       // Should have a response that acknowledges the calculation result
       expect(response.message.content).toBeDefined();
       expect(response.message.content.length).toBeGreaterThan(0);
-      expect(response.message.content.toLowerCase()).toContain("8");
+      expect(response.message.content.toLowerCase()).toContain("47");
 
       console.log("Multi-round response:", response.message.content);
+    },
+    30000
+  );
+
+  googleTestFn(
+    "should handle mismatched function call and response IDs",
+    async () => {
+      const messages = [
+        { role: "user" as const, content: "What is 15 plus 32?" },
+        {
+          role: "google_function_call" as const,
+          id: "calc_1",
+          name: "calculator",
+          args: {
+            operation: "add",
+            a: 15,
+            b: 32,
+          },
+        },
+        {
+          role: "google_function_response" as const,
+          id: "calc_2", // Different ID from the function call
+          name: "calculator",
+          response: {
+            result: 47,
+          },
+        },
+      ];
+
+      const response = await sendPrompt({
+        messages,
+        model: googleModel,
+        provider: AI_PROVIDERS.GOOGLE,
+        apiKey: process.env.GEMINI_API_KEY!,
+        tools: [calculatorTool],
+        toolCallMode: "AUTO",
+      });
+
+      // Should not have any tool calls since we already provided the result
+      expect(response.tool_calls).toBeUndefined();
+
+      // Should have a response that acknowledges the calculation result
+      expect(response.message.content).toBeDefined();
+      expect(response.message.content.length).toBeGreaterThan(0);
+      // The model should still be able to use the result even with mismatched IDs
+      expect(response.message.content.toLowerCase()).toContain("47");
+
+      console.log("Mismatched ID response:", response.message.content);
     },
     30000
   );
