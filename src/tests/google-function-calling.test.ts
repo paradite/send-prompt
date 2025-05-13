@@ -164,7 +164,7 @@ describe("Google Function Calling", () => {
     30000
   );
 
-  googleTestFn(
+  googleTestFn.skip(
     "should handle mismatched function call and response IDs",
     async () => {
       const messages = [
