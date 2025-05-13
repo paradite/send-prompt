@@ -3,6 +3,7 @@ import {
   AI_PROVIDER_TYPE,
   AI_PROVIDERS,
   ModelInfoMap,
+  AI_PROVIDER_CONFIG,
 } from "llm-info";
 import { OpenAI } from "openai";
 import Anthropic from "@anthropic-ai/sdk";
@@ -137,21 +138,69 @@ export type OpenAIChatCompletionResponse = {
 
 export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
-export type SendPromptOptions = {
+type BaseSendPromptOptions = {
   messages: InputMessage[];
-  model: ModelEnum;
-  provider: AI_PROVIDER_TYPE;
   apiKey: string;
   systemPrompt?: string;
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
 };
 
+type FirstPartyProviderOptions = BaseSendPromptOptions & {
+  provider:
+    | typeof AI_PROVIDERS.OPENAI
+    | typeof AI_PROVIDERS.ANTHROPIC
+    | typeof AI_PROVIDERS.GOOGLE;
+  model: ModelEnum;
+};
+
+type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
+  provider: typeof AI_PROVIDERS.OPENROUTER | typeof AI_PROVIDERS.FIREWORKS;
+  model: string;
+};
+
+type CustomProviderOptions = BaseSendPromptOptions & {
+  provider: string;
+  baseURL: string;
+  model: string;
+};
+
+export type SendPromptOptions =
+  | FirstPartyProviderOptions
+  | BuiltInBaseURLProviderOptions
+  | CustomProviderOptions;
+
 export function transformMessages(
   messages: InputMessage[],
-  provider: AI_PROVIDER_TYPE,
+  provider: AI_PROVIDER_TYPE | string,
   systemPrompt?: string
 ): TransformedMessages {
+  // For custom providers, treat them as OpenAI-compatible
+  if (
+    typeof provider === "string" &&
+    !Object.values(AI_PROVIDERS).includes(provider as AI_PROVIDER_TYPE)
+  ) {
+    const openaiMessages: OpenAIMessage[] = messages
+      .filter(
+        (msg) =>
+          msg.role !== "google_function_call" &&
+          msg.role !== "google_function_response"
+      )
+      .map(({ role, content }) => {
+        return { role, content };
+      });
+    if (systemPrompt) {
+      openaiMessages.unshift({
+        role: "developer",
+        content: systemPrompt,
+      });
+    }
+    return {
+      provider: AI_PROVIDERS.OPENAI,
+      messages: openaiMessages,
+    };
+  }
+
   switch (provider) {
     case AI_PROVIDERS.OPENAI: {
       const openaiMessages: OpenAIMessage[] = messages
@@ -334,17 +383,21 @@ function transformGoogleResponse(
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
-  const { messages, model, provider, apiKey, systemPrompt, tools } = options;
-  const transformed = transformMessages(messages, provider, systemPrompt);
+  const { messages, apiKey, model, systemPrompt, tools } = options;
+  const transformed = transformMessages(
+    messages,
+    options.provider,
+    systemPrompt
+  );
 
-  switch (provider) {
+  switch (options.provider) {
     case AI_PROVIDERS.OPENAI: {
       if (!isTransformedOpenAI(transformed)) {
         throw new Error("Messages were not properly transformed for OpenAI");
       }
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       const response = await openai.chat.completions.create({
-        model,
+        model: model,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -436,7 +489,52 @@ export async function sendPrompt(
       return transformGoogleResponse(response);
     }
 
-    default:
-      throw new Error(`Provider ${provider} is not supported yet`);
+    case AI_PROVIDERS.OPENROUTER:
+    case AI_PROVIDERS.FIREWORKS: {
+      if (!isTransformedOpenAI(transformed)) {
+        throw new Error(
+          "Messages were not properly transformed for OpenAI-compatible provider"
+        );
+      }
+      const openai = new OpenAI({
+        apiKey,
+        baseURL: AI_PROVIDER_CONFIG[provider].baseURL,
+        dangerouslyAllowBrowser: true,
+      });
+      const response = await openai.chat.completions.create({
+        model,
+        messages: transformed.messages,
+        tools: tools?.map((tool: FunctionDefinition) => ({
+          type: tool.type,
+          function: tool.function,
+        })),
+      });
+
+      return transformOpenAIResponse(response);
+    }
+
+    default: {
+      // Handle custom providers
+      if (!isTransformedOpenAI(transformed)) {
+        throw new Error(
+          "Messages were not properly transformed for OpenAI-compatible provider"
+        );
+      }
+      const openai = new OpenAI({
+        apiKey,
+        baseURL: (options as CustomProviderOptions).baseURL,
+        dangerouslyAllowBrowser: true,
+      });
+      const response = await openai.chat.completions.create({
+        model,
+        messages: transformed.messages,
+        tools: tools?.map((tool: FunctionDefinition) => ({
+          type: tool.type,
+          function: tool.function,
+        })),
+      });
+
+      return transformOpenAIResponse(response);
+    }
   }
 }
