@@ -427,11 +427,6 @@ export async function sendPrompt(
         };
       }
 
-      console.log("transformed");
-      console.log(JSON.stringify(transformed.messages, null, 2));
-      console.log("config");
-      console.log(JSON.stringify(config, null, 2));
-
       const response = await ai.models.generateContent({
         model,
         contents: transformed.messages,
