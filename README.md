@@ -8,11 +8,14 @@ The library uses [llm-info](https://www.npmjs.com/package/llm-info) for model an
 
 ## Features
 
-- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google)
+- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks)
 - 🤖 Support for latest models (GPT-4.1, Claude 3.7 Sonnet, Gemini 2.5 Pro)
 - 🔧 Supports function calling and system prompt
 - 📝 Standardized message format and response structure
 - 🛠️ Full TypeScript support for type safety
+- 🎯 No extra dependencies required except `llm-info` and `send-prompt`
+- 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
+- 🔌 Supports custom providers with OpenAI-compatible API
 
 ## Quick Demo
 
@@ -83,10 +86,41 @@ const googleResponse = await sendPrompt({
   systemPrompt: "You are a helpful assistant.",
 });
 
+// OpenRouter
+const openrouterResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: "meta-llama/llama-4-scout:free",
+  provider: AI_PROVIDERS.OPENROUTER,
+  apiKey: "your-openrouter-api-key",
+  systemPrompt: "You are a helpful assistant.",
+});
+
+// Fireworks
+const fireworksResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: "accounts/fireworks/models/deepseek-v3-0324",
+  provider: AI_PROVIDERS.FIREWORKS,
+  apiKey: "your-fireworks-api-key",
+  systemPrompt: "You are a helpful assistant.",
+});
+
+// Custom Provider
+const customResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: "custom-model",
+  provider: "custom",
+  baseURL: "https://your-custom-api.com/v1",
+  apiKey: "your-custom-api-key",
+  systemPrompt: "You are a helpful assistant.",
+});
+
 // All responses have the same structure
 console.log(openaiResponse.message.content);
 console.log(anthropicResponse.message.content);
 console.log(googleResponse.message.content);
+console.log(openrouterResponse.message.content);
+console.log(fireworksResponse.message.content);
+console.log(customResponse.message.content);
 ```
 
 ### Function Calling
@@ -208,3 +242,10 @@ The multi-round tool calling process involves:
 2. Your code executes the function and gets the result
 3. Second round: Include both the function call and its response in the messages
 4. Model provides the final response using the function result
+
+## Roadmap
+
+- [ ] Support for DeepSeek
+- [ ] Support for image input
+- [ ] Support for streaming
+- [ ] Better error handling
