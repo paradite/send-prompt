@@ -6,7 +6,10 @@ A unified TypeScript library for AI model interactions with standardized interfa
 
 Developed by the team behind [16x Prompt](https://prompt.16x.engineer) and [16x Eval](https://eval.16x.engineer).
 
-The library uses [llm-info](https://www.npmjs.com/package/llm-info) for model and provider information.
+Related projects:
+
+- [llm-info](https://github.com/paradite/llm-info): Information on LLM models, context window token limit, output token limit, pricing and more.
+- [ai-file-edit](https://github.com/paradite/ai-file-edit): A library for editing files using AI models such as GPT, Claude, and Gemini.
 
 ## Features
 
