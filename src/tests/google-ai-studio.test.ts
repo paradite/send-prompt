@@ -12,7 +12,8 @@ describe("Google Provider", () => {
     "should make a successful API call to Google",
     async () => {
       const messages = [
-        { role: "user" as const, content: "Hello, who are you?" },
+        // { role: "user" as const, content: "Hello, who are you?" },
+        { role: "user" as const, content: "What's the weather in Tokyo?" },
       ];
 
       // Test without system prompt

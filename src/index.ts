@@ -147,7 +147,6 @@ export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
 type BaseSendPromptOptions = {
   messages: InputMessage[];
-  apiKey: string;
   systemPrompt?: string;
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
@@ -159,23 +158,35 @@ type FirstPartyProviderOptions = BaseSendPromptOptions & {
     | typeof AI_PROVIDERS.ANTHROPIC
     | typeof AI_PROVIDERS.GOOGLE;
   model: ModelEnum;
+  apiKey: string;
 };
 
 type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
   provider: typeof AI_PROVIDERS.OPENROUTER | typeof AI_PROVIDERS.FIREWORKS;
   model: string;
+  apiKey: string;
 };
 
 type CustomProviderOptions = BaseSendPromptOptions & {
   provider: "custom";
   baseURL: string;
   customModel: string;
+  apiKey: string;
+};
+
+export type GoogleVertexAIOptions = BaseSendPromptOptions & {
+  provider: typeof AI_PROVIDERS.GOOGLE;
+  model: string;
+  vertexai: true;
+  project: string;
+  location: string;
 };
 
 export type SendPromptOptions =
   | FirstPartyProviderOptions
   | BuiltInBaseURLProviderOptions
-  | CustomProviderOptions;
+  | CustomProviderOptions
+  | GoogleVertexAIOptions;
 
 export type TransformSupportedProvider =
   | typeof AI_PROVIDERS.OPENAI
@@ -377,7 +388,7 @@ function transformGoogleResponse(
 export async function sendPrompt(
   options: SendPromptOptions
 ): Promise<StandardizedResponse> {
-  const { messages, apiKey, systemPrompt, tools } = options;
+  const { messages, systemPrompt, tools } = options;
   let providerToTransform: TransformSupportedProvider;
   let systemRole: "system" | "developer" = "developer";
   if (options.provider === AI_PROVIDERS.OPENAI) {
@@ -408,7 +419,10 @@ export async function sendPrompt(
       if (!isTransformedOpenAI(transformed)) {
         throw new Error("Messages were not properly transformed for OpenAI");
       }
-      const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+      const openai = new OpenAI({
+        apiKey: options.apiKey,
+        dangerouslyAllowBrowser: true,
+      });
       const response = await openai.chat.completions.create({
         model: options.model,
         messages: transformed.messages,
@@ -426,7 +440,7 @@ export async function sendPrompt(
         throw new Error("Messages were not properly transformed for Anthropic");
       }
       const anthropic = new Anthropic({
-        apiKey,
+        apiKey: options.apiKey,
         dangerouslyAllowBrowser: true,
       });
       let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
@@ -459,7 +473,23 @@ export async function sendPrompt(
       if (!isTransformedGoogle(transformed)) {
         throw new Error("Messages were not properly transformed for Google");
       }
-      const ai = new GoogleGenAI({ apiKey });
+      let ai: GoogleGenAI;
+      console.log("options", options);
+      console.log("vertexai" in options);
+      if (options.provider === AI_PROVIDERS.GOOGLE && "vertexai" in options) {
+        // Google Vertex AI
+        ai = new GoogleGenAI({
+          vertexai: true,
+          project: process.env.GOOGLE_CLOUD_PROJECT,
+          location: process.env.GOOGLE_CLOUD_LOCATION,
+        });
+      } else {
+        // Google GenAI
+        ai = new GoogleGenAI({ vertexai: false, apiKey: options.apiKey });
+      }
+
+      console.log("model", options.model);
+      console.log("ai.vertexai", ai.vertexai);
 
       // Prepare config for function calling if tools are provided
       let config: any = { systemInstruction: systemPrompt };
@@ -510,7 +540,7 @@ export async function sendPrompt(
         );
       }
       const openai = new OpenAI({
-        apiKey,
+        apiKey: options.apiKey,
         baseURL: AI_PROVIDER_CONFIG[options.provider].baseURL,
         dangerouslyAllowBrowser: true,
       });
@@ -546,7 +576,7 @@ export async function sendPrompt(
         );
       }
       const openai = new OpenAI({
-        apiKey,
+        apiKey: options.apiKey,
         baseURL: options.baseURL,
         dangerouslyAllowBrowser: true,
       });
