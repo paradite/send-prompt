@@ -145,18 +145,18 @@ export type OpenAIChatCompletionResponse = {
 
 export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
-type PromptOptions = {
+export type PromptOptions = {
   messages: InputMessage[];
   systemPrompt?: string;
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
 };
 
-type HeadersOptions = {
+export type HeadersOptions = {
   headers?: Record<string, string>;
 };
 
-type FirstPartyProviderOptions = {
+export type FirstPartyProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENAI
     | typeof AI_PROVIDERS.ANTHROPIC
@@ -165,7 +165,7 @@ type FirstPartyProviderOptions = {
   apiKey: string;
 } & HeadersOptions;
 
-type BaseURLProviderOptions = {
+export type BaseURLProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENROUTER
     | typeof AI_PROVIDERS.FIREWORKS
@@ -174,7 +174,7 @@ type BaseURLProviderOptions = {
   apiKey: string;
 } & HeadersOptions;
 
-type CustomProviderOptions = {
+export type CustomProviderOptions = {
   provider: "custom";
   baseURL: string;
   customModel: string;
