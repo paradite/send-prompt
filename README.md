@@ -28,19 +28,23 @@ Related projects:
 import { sendPrompt } from "send-prompt";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
-const response = await sendPrompt({
-  messages: [
-    { role: "user", content: "What's the weather like in Singapore?" },
-  ],
-  model: ModelEnum["gpt-4.1"],
-  // model: ModelEnum["claude-3-7-sonnet-20250219"],
-  // model: ModelEnum["gemini-2.5-pro-exp-03-25"],
-  provider: AI_PROVIDERS.OPENAI,
-  // provider: AI_PROVIDERS.ANTHROPIC,
-  // provider: AI_PROVIDERS.GOOGLE,
-  apiKey: process.env.API_KEY,
-  tools: [weatherTool],
-});
+const response = await sendPrompt(
+  {
+    messages: [
+      { role: "user", content: "What's the weather like in Singapore?" },
+    ],
+    tools: [weatherTool],
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    // model: ModelEnum["claude-3-7-sonnet-20250219"],
+    // model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+    provider: AI_PROVIDERS.OPENAI,
+    // provider: AI_PROVIDERS.ANTHROPIC,
+    // provider: AI_PROVIDERS.GOOGLE,
+    apiKey: process.env.API_KEY,
+  }
+);
 
 console.log(response.message.content);
 ```
@@ -65,80 +69,112 @@ import { sendPrompt } from "send-prompt";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
 // OpenAI
-const openaiResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: ModelEnum["gpt-4.1"],
-  provider: AI_PROVIDERS.OPENAI,
-  apiKey: "your-openai-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const openaiResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+  }
+);
 
 // Anthropic
-const anthropicResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: ModelEnum["claude-3-7-sonnet-20250219"],
-  provider: AI_PROVIDERS.ANTHROPIC,
-  apiKey: "your-anthropic-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const anthropicResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    model: ModelEnum["claude-3-7-sonnet-20250219"],
+    provider: AI_PROVIDERS.ANTHROPIC,
+    apiKey: "your-anthropic-api-key",
+  }
+);
 
 // Google
-const googleResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: ModelEnum["gemini-2.5-pro-exp-03-25"],
-  provider: AI_PROVIDERS.GOOGLE,
-  apiKey: "your-google-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const googleResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+    provider: AI_PROVIDERS.GOOGLE,
+    apiKey: "your-google-api-key",
+  }
+);
 
 // Google Vertex AI (requires gcloud CLI authentication)
 // https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal
-const googleVertexResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: ModelEnum["gemini-2.5-pro-exp-03-25"],
-  provider: AI_PROVIDERS.GOOGLE,
-  vertexai: true,
-  project: process.env.GOOGLE_CLOUD_PROJECT!, // Your Google Cloud project ID
-  location: process.env.GOOGLE_CLOUD_LOCATION!, // Your Google Cloud location (e.g., "us-central1")
-  systemPrompt: "You are a helpful assistant.",
-});
+const googleVertexResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+    provider: AI_PROVIDERS.GOOGLE_VERTEX_AI,
+    vertexai: true,
+    project: process.env.GOOGLE_CLOUD_PROJECT!, // Your Google Cloud project ID
+    location: process.env.GOOGLE_CLOUD_LOCATION!, // Your Google Cloud location (e.g., "us-central1")
+  }
+);
 
 // OpenRouter
-const openrouterResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  customModel: "meta-llama/llama-4-scout:free",
-  provider: AI_PROVIDERS.OPENROUTER,
-  apiKey: "your-openrouter-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const openrouterResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    customModel: "meta-llama/llama-4-scout:free",
+    provider: AI_PROVIDERS.OPENROUTER,
+    apiKey: "your-openrouter-api-key",
+  }
+);
 
 // Fireworks
-const fireworksResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  customModel: "accounts/fireworks/models/deepseek-v3-0324",
-  provider: AI_PROVIDERS.FIREWORKS,
-  apiKey: "your-fireworks-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const fireworksResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    customModel: "accounts/fireworks/models/deepseek-v3-0324",
+    provider: AI_PROVIDERS.FIREWORKS,
+    apiKey: "your-fireworks-api-key",
+  }
+);
 
 // DeepSeek
-const deepseekResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  customModel: "deepseek-chat",
-  provider: AI_PROVIDERS.DEEPSEEK,
-  apiKey: "your-deepseek-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const deepseekResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    customModel: "deepseek-chat",
+    provider: AI_PROVIDERS.DEEPSEEK,
+    apiKey: "your-deepseek-api-key",
+  }
+);
 
 // Custom Provider
-const customResponse = await sendPrompt({
-  messages: [{ role: "user", content: "Hello, who are you?" }],
-  customModel: "custom-model",
-  provider: "custom",
-  baseURL: "https://your-custom-api.com/v1",
-  apiKey: "your-custom-api-key",
-  systemPrompt: "You are a helpful assistant.",
-});
+const customResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+    systemPrompt: "You are a helpful assistant.",
+  },
+  {
+    customModel: "custom-model",
+    provider: "custom",
+    baseURL: "https://your-custom-api.com/v1",
+    apiKey: "your-custom-api-key",
+  }
+);
 
 // All responses have the same structure
 console.log(openaiResponse.message.content);
@@ -177,13 +213,17 @@ const calculatorTool = {
   },
 };
 
-const response = await sendPrompt({
-  messages: [{ role: "user", content: "What is 5 plus 3?" }],
-  model: ModelEnum["gpt-4.1"],
-  provider: AI_PROVIDERS.OPENAI,
-  apiKey: "your-openai-api-key",
-  tools: [calculatorTool],
-});
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "What is 5 plus 3?" }],
+    tools: [calculatorTool],
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+  }
+);
 
 // Expected response structure:
 // {
@@ -213,14 +253,18 @@ For Google's Gemini models, you can handle multi-round tool calls by including f
 
 ```typescript
 // First round - model makes a function call
-const firstResponse = await sendPrompt({
-  messages: [{ role: "user", content: "What is 15 plus 32?" }],
-  model: ModelEnum["gemini-2.5-pro-exp-03-25"],
-  provider: AI_PROVIDERS.GOOGLE,
-  apiKey: "your-google-api-key",
-  tools: [calculatorTool],
-  toolCallMode: "AUTO",
-});
+const firstResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "What is 15 plus 32?" }],
+    tools: [calculatorTool],
+    toolCallMode: "AUTO",
+  },
+  {
+    model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+    provider: AI_PROVIDERS.GOOGLE,
+    apiKey: "your-google-api-key",
+  }
+);
 
 // Handle the function call and get the result
 if (firstResponse.tool_calls) {
@@ -229,28 +273,32 @@ if (firstResponse.tool_calls) {
   const result = calculate(args.operation, args.a, args.b); // Your calculation function
 
   // Second round - include function call and response in messages
-  const secondResponse = await sendPrompt({
-    messages: [
-      { role: "user", content: "What is 15 plus 32?" },
-      {
-        role: "google_function_call",
-        id: toolCall.id,
-        name: toolCall.function.name,
-        args: args,
-      },
-      {
-        role: "google_function_response",
-        id: toolCall.id,
-        name: toolCall.function.name,
-        response: { result },
-      },
-    ],
-    model: ModelEnum["gemini-2.5-pro-exp-03-25"],
-    provider: AI_PROVIDERS.GOOGLE,
-    apiKey: "your-google-api-key",
-    tools: [calculatorTool],
-    toolCallMode: "AUTO",
-  });
+  const secondResponse = await sendPrompt(
+    {
+      messages: [
+        { role: "user", content: "What is 15 plus 32?" },
+        {
+          role: "google_function_call",
+          id: toolCall.id,
+          name: toolCall.function.name,
+          args: args,
+        },
+        {
+          role: "google_function_response",
+          id: toolCall.id,
+          name: toolCall.function.name,
+          response: { result },
+        },
+      ],
+      tools: [calculatorTool],
+      toolCallMode: "AUTO",
+    },
+    {
+      model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+      provider: AI_PROVIDERS.GOOGLE,
+      apiKey: "your-google-api-key",
+    }
+  );
 
   // The model will now respond with the final answer
   console.log("Final response:", secondResponse.message.content);

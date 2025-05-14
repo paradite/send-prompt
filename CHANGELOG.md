@@ -9,7 +9,7 @@ All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 - Support for tool calling with OpenRouter
 - Support for DeepSeek provider
 
-### Improvements 🔧
+### Breaking Changes 💥
 
 - 📝 Separate input parameters into `promptOptions` (`PromptOptions`) and `providerOptions` (`ProviderOptions`) for better TypeScript support
 - 📝 Differentiate between `model` (Enum) and `customModel` (string) in `SendPromptOptions` for better TypeScript support
