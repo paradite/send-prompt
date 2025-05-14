@@ -133,6 +133,10 @@ const openrouterResponse = await sendPrompt(
     customModel: "meta-llama/llama-4-scout:free",
     provider: AI_PROVIDERS.OPENROUTER,
     apiKey: "your-openrouter-api-key",
+    headers: {
+      "HTTP-Referer": "https://eval.16x.engineer/",
+      "X-Title": "16x Eval",
+    },
   }
 );
 

@@ -26,6 +26,10 @@ describe("OpenRouter Provider", () => {
           provider: AI_PROVIDERS.OPENROUTER,
           customModel: openRouterModel,
           apiKey: process.env.OPENROUTER_API_KEY!,
+          headers: {
+            "HTTP-Referer": "https://eval.16x.engineer/",
+            "X-Title": "16x Eval",
+          },
         }
       );
 
@@ -42,6 +46,10 @@ describe("OpenRouter Provider", () => {
           customModel: openRouterModel,
           provider: AI_PROVIDERS.OPENROUTER,
           apiKey: process.env.OPENROUTER_API_KEY!,
+          headers: {
+            "HTTP-Referer": "https://eval.16x.engineer/",
+            "X-Title": "16x Eval",
+          },
         }
       );
 

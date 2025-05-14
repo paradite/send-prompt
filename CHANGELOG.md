@@ -2,6 +2,12 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.1.0] - 2025-05-14
+
+### New Features ✨
+
+- Support for `headers` in provider options
+
 ## [2.0.0] - 2025-05-14
 
 ### New Features ✨

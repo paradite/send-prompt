@@ -152,6 +152,10 @@ type PromptOptions = {
   toolCallMode?: "ANY" | "AUTO";
 };
 
+type HeadersOptions = {
+  headers?: Record<string, string>;
+};
+
 type FirstPartyProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENAI
@@ -159,7 +163,7 @@ type FirstPartyProviderOptions = {
     | typeof AI_PROVIDERS.GOOGLE;
   model: ModelEnum;
   apiKey: string;
-};
+} & HeadersOptions;
 
 type BaseURLProviderOptions = {
   provider:
@@ -168,14 +172,14 @@ type BaseURLProviderOptions = {
     | typeof AI_PROVIDERS.DEEPSEEK;
   customModel: string;
   apiKey: string;
-};
+} & HeadersOptions;
 
 type CustomProviderOptions = {
   provider: "custom";
   baseURL: string;
   customModel: string;
   apiKey: string;
-};
+} & HeadersOptions;
 
 export type GoogleVertexAIProviderOptions = {
   provider: typeof AI_PROVIDERS.GOOGLE_VERTEX_AI;
@@ -432,6 +436,9 @@ export async function sendPrompt(
       const openai = new OpenAI({
         apiKey: providerOptions.apiKey,
         dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
       });
       const response = await openai.chat.completions.create({
         model: providerOptions.model,
@@ -452,6 +459,9 @@ export async function sendPrompt(
       const anthropic = new Anthropic({
         apiKey: providerOptions.apiKey,
         dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
       });
       let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
       if (providerOptions.model === ModelEnum["claude-3-7-sonnet-20250219"]) {
@@ -559,6 +569,9 @@ export async function sendPrompt(
         apiKey: providerOptions.apiKey,
         baseURL: AI_PROVIDER_CONFIG[providerOptions.provider].baseURL,
         dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
       });
       const response = await openai.chat.completions.create({
         model: providerOptions.customModel,
@@ -595,6 +608,9 @@ export async function sendPrompt(
         apiKey: providerOptions.apiKey,
         baseURL: providerOptions.baseURL,
         dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
       });
       const response = await openai.chat.completions.create({
         model: providerOptions.customModel,
