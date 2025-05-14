@@ -16,13 +16,17 @@ describe("Claude Function Calling", () => {
       ];
 
       try {
-        const response = await sendPrompt({
-          messages,
-          model: claudeModel,
-          provider: AI_PROVIDERS.ANTHROPIC,
-          apiKey: process.env.ANTHROPIC_API_KEY!,
-          tools: [calculatorTool],
-        });
+        const response = await sendPrompt(
+          {
+            messages,
+            tools: [calculatorTool],
+          },
+          {
+            model: claudeModel,
+            provider: AI_PROVIDERS.ANTHROPIC,
+            apiKey: process.env.ANTHROPIC_API_KEY!,
+          }
+        );
 
         console.log("Full response:", JSON.stringify(response, null, 2));
         console.log("Message content:", response.message.content);
@@ -61,13 +65,17 @@ describe("Claude Function Calling", () => {
       ];
 
       try {
-        const response = await sendPrompt({
-          messages,
-          model: claudeModel,
-          provider: AI_PROVIDERS.ANTHROPIC,
-          apiKey: process.env.ANTHROPIC_API_KEY!,
-          tools: [calculatorTool],
-        });
+        const response = await sendPrompt(
+          {
+            messages,
+            tools: [calculatorTool],
+          },
+          {
+            model: claudeModel,
+            provider: AI_PROVIDERS.ANTHROPIC,
+            apiKey: process.env.ANTHROPIC_API_KEY!,
+          }
+        );
 
         console.log("Full response:", JSON.stringify(response, null, 2));
         console.log("Message content:", response.message.content);

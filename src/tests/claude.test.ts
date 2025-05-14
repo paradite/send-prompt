@@ -15,24 +15,32 @@ describe("Anthropic Provider", () => {
       ];
 
       // Test without system prompt
-      const response = await sendPrompt({
-        messages,
-        model: anthropicModel,
-        provider: AI_PROVIDERS.ANTHROPIC,
-        apiKey: process.env.ANTHROPIC_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          model: anthropicModel,
+          provider: AI_PROVIDERS.ANTHROPIC,
+          apiKey: process.env.ANTHROPIC_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("Anthropic Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: anthropicModel,
-        provider: AI_PROVIDERS.ANTHROPIC,
-        apiKey: process.env.ANTHROPIC_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am a Claude assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am a Claude assistant'",
+        },
+        {
+          model: anthropicModel,
+          provider: AI_PROVIDERS.ANTHROPIC,
+          apiKey: process.env.ANTHROPIC_API_KEY!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am a Claude assistant"

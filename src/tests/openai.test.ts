@@ -14,24 +14,32 @@ describe("OpenAI Provider", () => {
         { role: "user" as const, content: "Hello, who are you?" },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: openAIModel,
-        provider: AI_PROVIDERS.OPENAI,
-        apiKey: process.env.OPENAI_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          model: openAIModel,
+          provider: AI_PROVIDERS.OPENAI,
+          apiKey: process.env.OPENAI_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("OpenAI Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: openAIModel,
-        provider: AI_PROVIDERS.OPENAI,
-        apiKey: process.env.OPENAI_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am an OpenAI assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am an OpenAI assistant'",
+        },
+        {
+          model: openAIModel,
+          provider: AI_PROVIDERS.OPENAI,
+          apiKey: process.env.OPENAI_API_KEY!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am an OpenAI assistant"

@@ -16,14 +16,18 @@ describe("Google Function Calling", () => {
         { role: "user" as const, content: "What is 5 plus 3?" },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        tools: [calculatorTool],
-        toolCallMode: "AUTO",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+          toolCallMode: "AUTO",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       // Check if we got a function call
       expect(response.tool_calls).toBeDefined();
@@ -53,14 +57,18 @@ describe("Google Function Calling", () => {
         },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        tools: [calculatorTool],
-        toolCallMode: "ANY",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+          toolCallMode: "ANY",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       expect(response.tool_calls).toBeDefined();
       expect(response.tool_calls?.length).toBeGreaterThan(0);
@@ -97,14 +105,18 @@ describe("Google Function Calling", () => {
         },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        tools: [calculatorTool],
-        toolCallMode: "AUTO",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+          toolCallMode: "AUTO",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       // Should not have any tool calls
       expect(response.tool_calls).toBeUndefined();
@@ -143,14 +155,18 @@ describe("Google Function Calling", () => {
         },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        tools: [calculatorTool],
-        toolCallMode: "AUTO",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+          toolCallMode: "AUTO",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       // Should not have any tool calls since we already provided the result
       expect(response.tool_calls).toBeUndefined();
@@ -190,14 +206,18 @@ describe("Google Function Calling", () => {
         },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        tools: [calculatorTool],
-        toolCallMode: "AUTO",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+          toolCallMode: "AUTO",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       // Should not have any tool calls since we already provided the result
       expect(response.tool_calls).toBeUndefined();

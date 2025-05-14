@@ -13,24 +13,32 @@ describe("Fireworks Provider", () => {
       ];
 
       // Test without system prompt
-      const response = await sendPrompt({
-        messages,
-        customModel: "accounts/fireworks/models/deepseek-v3-0324",
-        provider: AI_PROVIDERS.FIREWORKS,
-        apiKey: process.env.FIREWORKS_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          customModel: "accounts/fireworks/models/deepseek-v3-0324",
+          provider: AI_PROVIDERS.FIREWORKS,
+          apiKey: process.env.FIREWORKS_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("Fireworks Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        customModel: "accounts/fireworks/models/deepseek-v3-0324",
-        provider: AI_PROVIDERS.FIREWORKS,
-        apiKey: process.env.FIREWORKS_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am a Fireworks assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am a Fireworks assistant'",
+        },
+        {
+          customModel: "accounts/fireworks/models/deepseek-v3-0324",
+          provider: AI_PROVIDERS.FIREWORKS,
+          apiKey: process.env.FIREWORKS_API_KEY!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am a Fireworks assistant"

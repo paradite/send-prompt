@@ -14,24 +14,32 @@ describe("DeepSeek Provider", () => {
         { role: "user" as const, content: "Hello, who are you?" },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        customModel: deepseekModel,
-        provider: AI_PROVIDERS.DEEPSEEK,
-        apiKey: process.env.DEEPSEEK_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          customModel: deepseekModel,
+          provider: AI_PROVIDERS.DEEPSEEK,
+          apiKey: process.env.DEEPSEEK_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("DeepSeek Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        customModel: deepseekModel,
-        provider: AI_PROVIDERS.DEEPSEEK,
-        apiKey: process.env.DEEPSEEK_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am a DeepSeek assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am a DeepSeek assistant'",
+        },
+        {
+          customModel: deepseekModel,
+          provider: AI_PROVIDERS.DEEPSEEK,
+          apiKey: process.env.DEEPSEEK_API_KEY!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am a DeepSeek assistant"

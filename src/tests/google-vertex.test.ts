@@ -17,28 +17,36 @@ describe("Google Vertex AI Provider", () => {
       ];
 
       // Test without system prompt
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        vertexai: true,
-        project: process.env.GOOGLE_CLOUD_PROJECT!,
-        location: process.env.GOOGLE_CLOUD_LOCATION!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE_VERTEX_AI,
+          vertexai: true,
+          project: process.env.GOOGLE_CLOUD_PROJECT!,
+          location: process.env.GOOGLE_CLOUD_LOCATION!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("Google Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        vertexai: true,
-        project: process.env.GOOGLE_CLOUD_PROJECT!,
-        location: process.env.GOOGLE_CLOUD_LOCATION!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am a Google assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am a Google assistant'",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE_VERTEX_AI,
+          vertexai: true,
+          project: process.env.GOOGLE_CLOUD_PROJECT!,
+          location: process.env.GOOGLE_CLOUD_LOCATION!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am a Google assistant"

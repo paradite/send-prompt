@@ -2,7 +2,7 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
-## [1.0.14] - 2025-05-14
+## [2.0.0] - 2025-05-14
 
 ### New Features ✨
 
@@ -11,7 +11,8 @@ All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
 ### Improvements 🔧
 
-- 📝 Differentiate between `model` (Enum) and `customModel` (string) in `SendPromptOptions` to provide better TypeScript support
+- 📝 Separate input parameters into `promptOptions` (`PromptOptions`) and `providerOptions` (`ProviderOptions`) for better TypeScript support
+- 📝 Differentiate between `model` (Enum) and `customModel` (string) in `SendPromptOptions` for better TypeScript support
 
 ## [1.0.11] - 2025-05-14
 

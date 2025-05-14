@@ -145,14 +145,14 @@ export type OpenAIChatCompletionResponse = {
 
 export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
-type BaseSendPromptOptions = {
+type PromptOptions = {
   messages: InputMessage[];
   systemPrompt?: string;
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
 };
 
-type FirstPartyProviderOptions = BaseSendPromptOptions & {
+type FirstPartyProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENAI
     | typeof AI_PROVIDERS.ANTHROPIC
@@ -161,7 +161,7 @@ type FirstPartyProviderOptions = BaseSendPromptOptions & {
   apiKey: string;
 };
 
-type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
+type BaseURLProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENROUTER
     | typeof AI_PROVIDERS.FIREWORKS
@@ -170,26 +170,26 @@ type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
   apiKey: string;
 };
 
-type CustomProviderOptions = BaseSendPromptOptions & {
+type CustomProviderOptions = {
   provider: "custom";
   baseURL: string;
   customModel: string;
   apiKey: string;
 };
 
-export type GoogleVertexAIOptions = BaseSendPromptOptions & {
-  provider: typeof AI_PROVIDERS.GOOGLE;
+export type GoogleVertexAIProviderOptions = {
+  provider: typeof AI_PROVIDERS.GOOGLE_VERTEX_AI;
   model: string;
   vertexai: true;
   project: string;
   location: string;
 };
 
-export type SendPromptOptions =
+export type ProviderOptions =
   | FirstPartyProviderOptions
-  | BuiltInBaseURLProviderOptions
+  | BaseURLProviderOptions
   | CustomProviderOptions
-  | GoogleVertexAIOptions;
+  | GoogleVertexAIProviderOptions;
 
 export type TransformSupportedProvider =
   | typeof AI_PROVIDERS.OPENAI
@@ -389,28 +389,32 @@ function transformGoogleResponse(
 }
 
 export async function sendPrompt(
-  options: SendPromptOptions
+  promptOptions: PromptOptions,
+  providerOptions: ProviderOptions
 ): Promise<StandardizedResponse> {
-  const { messages, systemPrompt, tools } = options;
+  const { messages, systemPrompt, tools } = promptOptions;
   let providerToTransform: TransformSupportedProvider;
   let systemRole: "system" | "developer" = "developer";
-  if (options.provider === AI_PROVIDERS.OPENAI) {
+  if (providerOptions.provider === AI_PROVIDERS.OPENAI) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "developer";
-  } else if (options.provider === AI_PROVIDERS.FIREWORKS) {
+  } else if (providerOptions.provider === AI_PROVIDERS.FIREWORKS) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
-  } else if (options.provider === AI_PROVIDERS.OPENROUTER) {
+  } else if (providerOptions.provider === AI_PROVIDERS.OPENROUTER) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
-  } else if (options.provider === AI_PROVIDERS.DEEPSEEK) {
+  } else if (providerOptions.provider === AI_PROVIDERS.DEEPSEEK) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
-  } else if (options.provider === "custom") {
+  } else if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
+    providerToTransform = AI_PROVIDERS.GOOGLE;
+    systemRole = "system";
+  } else if (providerOptions.provider === "custom") {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
   } else {
-    providerToTransform = options.provider;
+    providerToTransform = providerOptions.provider;
     systemRole = "system";
   }
   const transformed = transformMessagesForProvider({
@@ -420,17 +424,17 @@ export async function sendPrompt(
     systemRole,
   });
 
-  switch (options.provider) {
+  switch (providerOptions.provider) {
     case AI_PROVIDERS.OPENAI: {
       if (!isTransformedOpenAI(transformed)) {
         throw new Error("Messages were not properly transformed for OpenAI");
       }
       const openai = new OpenAI({
-        apiKey: options.apiKey,
+        apiKey: providerOptions.apiKey,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model: options.model,
+        model: providerOptions.model,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -446,22 +450,23 @@ export async function sendPrompt(
         throw new Error("Messages were not properly transformed for Anthropic");
       }
       const anthropic = new Anthropic({
-        apiKey: options.apiKey,
+        apiKey: providerOptions.apiKey,
         dangerouslyAllowBrowser: true,
       });
       let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
-      if (options.model === ModelEnum["claude-3-7-sonnet-20250219"]) {
+      if (providerOptions.model === ModelEnum["claude-3-7-sonnet-20250219"]) {
         // use token-efficient-tools-2025-02-19 beta for claude-3-7-sonnet-20250219
         betas = ["token-efficient-tools-2025-02-19"];
       }
       let maxTokens =
-        ModelInfoMap[options.model].outputTokenLimit || DEFAULT_MAX_TOKENS;
+        ModelInfoMap[providerOptions.model].outputTokenLimit ||
+        DEFAULT_MAX_TOKENS;
       if (tools && tools.length > 0) {
         // limit max tokens to default max tokens for function calling
         maxTokens = DEFAULT_MAX_TOKENS;
       }
       const claudeRes = await anthropic.beta.messages.create({
-        model: options.model,
+        model: providerOptions.model,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: transformed.messages,
@@ -475,14 +480,15 @@ export async function sendPrompt(
       return transformAnthropicResponse(claudeRes);
     }
 
-    case AI_PROVIDERS.GOOGLE: {
+    case AI_PROVIDERS.GOOGLE:
+    case AI_PROVIDERS.GOOGLE_VERTEX_AI: {
       if (!isTransformedGoogle(transformed)) {
         throw new Error("Messages were not properly transformed for Google");
       }
       let ai: GoogleGenAI;
-      console.log("options", options);
-      console.log("vertexai" in options);
-      if (options.provider === AI_PROVIDERS.GOOGLE && "vertexai" in options) {
+      console.log("options", providerOptions);
+      console.log("vertexai" in providerOptions);
+      if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
         // Google Vertex AI
         ai = new GoogleGenAI({
           vertexai: true,
@@ -491,10 +497,13 @@ export async function sendPrompt(
         });
       } else {
         // Google GenAI
-        ai = new GoogleGenAI({ vertexai: false, apiKey: options.apiKey });
+        ai = new GoogleGenAI({
+          vertexai: false,
+          apiKey: providerOptions.apiKey,
+        });
       }
 
-      console.log("model", options.model);
+      console.log("model", providerOptions.model);
       console.log("ai.vertexai", ai.vertexai);
 
       // Prepare config for function calling if tools are provided
@@ -505,11 +514,11 @@ export async function sendPrompt(
           toolConfig: {
             functionCallingConfig: {
               mode:
-                options.toolCallMode === "ANY"
+                promptOptions.toolCallMode === "ANY"
                   ? FunctionCallingConfigMode.ANY
                   : FunctionCallingConfigMode.AUTO,
               allowedFunctionNames:
-                options.toolCallMode === "ANY"
+                promptOptions.toolCallMode === "ANY"
                   ? tools.map((tool) => tool.function.name)
                   : undefined,
             },
@@ -530,7 +539,7 @@ export async function sendPrompt(
       }
 
       const response = await ai.models.generateContent({
-        model: options.model,
+        model: providerOptions.model,
         contents: transformed.messages,
         config,
       });
@@ -547,12 +556,12 @@ export async function sendPrompt(
         );
       }
       const openai = new OpenAI({
-        apiKey: options.apiKey,
-        baseURL: AI_PROVIDER_CONFIG[options.provider].baseURL,
+        apiKey: providerOptions.apiKey,
+        baseURL: AI_PROVIDER_CONFIG[providerOptions.provider].baseURL,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model: options.customModel,
+        model: providerOptions.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -583,12 +592,12 @@ export async function sendPrompt(
         );
       }
       const openai = new OpenAI({
-        apiKey: options.apiKey,
-        baseURL: options.baseURL,
+        apiKey: providerOptions.apiKey,
+        baseURL: providerOptions.baseURL,
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model: options.customModel,
+        model: providerOptions.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,

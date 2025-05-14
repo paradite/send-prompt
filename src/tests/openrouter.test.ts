@@ -18,24 +18,32 @@ describe("OpenRouter Provider", () => {
       ];
 
       // Test without system prompt
-      const response = await sendPrompt({
-        messages,
-        customModel: openRouterModel,
-        provider: AI_PROVIDERS.OPENROUTER,
-        apiKey: process.env.OPENROUTER_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          provider: AI_PROVIDERS.OPENROUTER,
+          customModel: openRouterModel,
+          apiKey: process.env.OPENROUTER_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("OpenRouter Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        customModel: openRouterModel,
-        provider: AI_PROVIDERS.OPENROUTER,
-        apiKey: process.env.OPENROUTER_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am an OpenRouter assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am an OpenRouter assistant'",
+        },
+        {
+          customModel: openRouterModel,
+          provider: AI_PROVIDERS.OPENROUTER,
+          apiKey: process.env.OPENROUTER_API_KEY!,
+        }
+      );
 
       console.log(systemPromptResponse);
 

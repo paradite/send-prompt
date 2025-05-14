@@ -16,13 +16,17 @@ describe("OpenRouter Function Calling", () => {
         { role: "user" as const, content: "What is 5 plus 3?" },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        customModel: openRouterModel,
-        provider: AI_PROVIDERS.OPENROUTER,
-        apiKey: process.env.OPENROUTER_API_KEY!,
-        tools: [calculatorTool],
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+        },
+        {
+          provider: AI_PROVIDERS.OPENROUTER,
+          customModel: openRouterModel,
+          apiKey: process.env.OPENROUTER_API_KEY!,
+        }
+      );
 
       // Check if we got a function call
       expect(response.tool_calls).toBeDefined();
@@ -52,13 +56,17 @@ describe("OpenRouter Function Calling", () => {
         },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        customModel: openRouterModel,
-        provider: AI_PROVIDERS.OPENROUTER,
-        apiKey: process.env.OPENROUTER_API_KEY!,
-        tools: [calculatorTool],
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          tools: [calculatorTool],
+        },
+        {
+          customModel: openRouterModel,
+          provider: AI_PROVIDERS.OPENROUTER,
+          apiKey: process.env.OPENROUTER_API_KEY!,
+        }
+      );
 
       expect(response.tool_calls).toBeDefined();
       expect(response.tool_calls?.length).toBeGreaterThan(0);

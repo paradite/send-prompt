@@ -17,24 +17,32 @@ describe("Google Provider", () => {
       ];
 
       // Test without system prompt
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       expect(response.message.content).toBeTruthy();
       console.log("Google Response:", response.message.content);
 
-      const systemPromptResponse = await sendPrompt({
-        messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant that always responds with 'I am a Google assistant'",
-      });
+      const systemPromptResponse = await sendPrompt(
+        {
+          messages: [{ role: "user" as const, content: "What is your role?" }],
+          systemPrompt:
+            "You are a helpful assistant that always responds with 'I am a Google assistant'",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       expect(systemPromptResponse.message.content).toContain(
         "I am a Google assistant"
@@ -56,14 +64,18 @@ describe("Google Provider", () => {
         { role: "user" as const, content: "What role are you using?" },
       ];
 
-      const response = await sendPrompt({
-        messages,
-        model: googleModel,
-        provider: AI_PROVIDERS.GOOGLE,
-        apiKey: process.env.GEMINI_API_KEY!,
-        systemPrompt:
-          "You are a helpful assistant. When asked about your role, respond with 'I am using the model role'",
-      });
+      const response = await sendPrompt(
+        {
+          messages,
+          systemPrompt:
+            "You are a helpful assistant. When asked about your role, respond with 'I am using the model role'",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
 
       expect(response.message.role).toBe("assistant");
       expect(response.message.content).toContain("I am using the model role");
