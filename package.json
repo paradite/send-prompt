@@ -1,7 +1,7 @@
 {
   "name": "send-prompt",
   "version": "1.0.11",
-  "description": "A lightweight library to send prompt to models",
+  "description": "A unified TypeScript library for AI model interactions with standardized interfaces and function calling.",
   "main": "dist/index.js",
   "type": "module",
   "module": "./dist/index.js",
