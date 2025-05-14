@@ -16,7 +16,7 @@ describe("DeepSeek Provider", () => {
 
       const response = await sendPrompt({
         messages,
-        model: deepseekModel,
+        customModel: deepseekModel,
         provider: AI_PROVIDERS.DEEPSEEK,
         apiKey: process.env.DEEPSEEK_API_KEY!,
       });
@@ -26,7 +26,7 @@ describe("DeepSeek Provider", () => {
 
       const systemPromptResponse = await sendPrompt({
         messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: deepseekModel,
+        customModel: deepseekModel,
         provider: AI_PROVIDERS.DEEPSEEK,
         apiKey: process.env.DEEPSEEK_API_KEY!,
         systemPrompt:

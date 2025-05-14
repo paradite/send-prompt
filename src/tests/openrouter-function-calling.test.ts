@@ -18,7 +18,7 @@ describe("OpenRouter Function Calling", () => {
 
       const response = await sendPrompt({
         messages,
-        model: openRouterModel,
+        customModel: openRouterModel,
         provider: AI_PROVIDERS.OPENROUTER,
         apiKey: process.env.OPENROUTER_API_KEY!,
         tools: [calculatorTool],
@@ -54,7 +54,7 @@ describe("OpenRouter Function Calling", () => {
 
       const response = await sendPrompt({
         messages,
-        model: openRouterModel,
+        customModel: openRouterModel,
         provider: AI_PROVIDERS.OPENROUTER,
         apiKey: process.env.OPENROUTER_API_KEY!,
         tools: [calculatorTool],

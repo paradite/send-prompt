@@ -15,7 +15,7 @@ describe("Fireworks Provider", () => {
       // Test without system prompt
       const response = await sendPrompt({
         messages,
-        model: "accounts/fireworks/models/deepseek-v3-0324",
+        customModel: "accounts/fireworks/models/deepseek-v3-0324",
         provider: AI_PROVIDERS.FIREWORKS,
         apiKey: process.env.FIREWORKS_API_KEY!,
       });
@@ -25,7 +25,7 @@ describe("Fireworks Provider", () => {
 
       const systemPromptResponse = await sendPrompt({
         messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: "accounts/fireworks/models/deepseek-v3-0324",
+        customModel: "accounts/fireworks/models/deepseek-v3-0324",
         provider: AI_PROVIDERS.FIREWORKS,
         apiKey: process.env.FIREWORKS_API_KEY!,
         systemPrompt:

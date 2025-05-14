@@ -106,7 +106,7 @@ const googleVertexResponse = await sendPrompt({
 // OpenRouter
 const openrouterResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: "meta-llama/llama-4-scout:free",
+  customModel: "meta-llama/llama-4-scout:free",
   provider: AI_PROVIDERS.OPENROUTER,
   apiKey: "your-openrouter-api-key",
   systemPrompt: "You are a helpful assistant.",
@@ -115,7 +115,7 @@ const openrouterResponse = await sendPrompt({
 // Fireworks
 const fireworksResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: "accounts/fireworks/models/deepseek-v3-0324",
+  customModel: "accounts/fireworks/models/deepseek-v3-0324",
   provider: AI_PROVIDERS.FIREWORKS,
   apiKey: "your-fireworks-api-key",
   systemPrompt: "You are a helpful assistant.",
@@ -124,7 +124,7 @@ const fireworksResponse = await sendPrompt({
 // DeepSeek
 const deepseekResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: ModelEnum["deepseek-chat"],
+  customModel: "deepseek-chat",
   provider: AI_PROVIDERS.DEEPSEEK,
   apiKey: "your-deepseek-api-key",
   systemPrompt: "You are a helpful assistant.",
@@ -133,7 +133,7 @@ const deepseekResponse = await sendPrompt({
 // Custom Provider
 const customResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
-  model: "custom-model",
+  customModel: "custom-model",
   provider: "custom",
   baseURL: "https://your-custom-api.com/v1",
   apiKey: "your-custom-api-key",

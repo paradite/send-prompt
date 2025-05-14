@@ -20,7 +20,7 @@ describe("OpenRouter Provider", () => {
       // Test without system prompt
       const response = await sendPrompt({
         messages,
-        model: openRouterModel,
+        customModel: openRouterModel,
         provider: AI_PROVIDERS.OPENROUTER,
         apiKey: process.env.OPENROUTER_API_KEY!,
       });
@@ -30,7 +30,7 @@ describe("OpenRouter Provider", () => {
 
       const systemPromptResponse = await sendPrompt({
         messages: [{ role: "user" as const, content: "What is your role?" }],
-        model: openRouterModel,
+        customModel: openRouterModel,
         provider: AI_PROVIDERS.OPENROUTER,
         apiKey: process.env.OPENROUTER_API_KEY!,
         systemPrompt:

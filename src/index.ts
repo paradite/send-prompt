@@ -166,7 +166,7 @@ type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
     | typeof AI_PROVIDERS.OPENROUTER
     | typeof AI_PROVIDERS.FIREWORKS
     | typeof AI_PROVIDERS.DEEPSEEK;
-  model: string;
+  customModel: string;
   apiKey: string;
 };
 
@@ -552,7 +552,7 @@ export async function sendPrompt(
         dangerouslyAllowBrowser: true,
       });
       const response = await openai.chat.completions.create({
-        model: options.model,
+        model: options.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
