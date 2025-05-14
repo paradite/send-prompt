@@ -13,7 +13,7 @@ Related projects:
 
 ## Features
 
-- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks)
+- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek)
 - 🤖 Support for latest models (GPT-4.1, Claude 3.7 Sonnet, Gemini 2.5 Pro)
 - 🔧 Supports function calling and system prompt
 - 📝 Standardized message format and response structure
@@ -118,6 +118,15 @@ const fireworksResponse = await sendPrompt({
   model: "accounts/fireworks/models/deepseek-v3-0324",
   provider: AI_PROVIDERS.FIREWORKS,
   apiKey: "your-fireworks-api-key",
+  systemPrompt: "You are a helpful assistant.",
+});
+
+// DeepSeek
+const deepseekResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: ModelEnum["deepseek-chat"],
+  provider: AI_PROVIDERS.DEEPSEEK,
+  apiKey: "your-deepseek-api-key",
   systemPrompt: "You are a helpful assistant.",
 });
 
@@ -257,7 +266,7 @@ The multi-round tool calling process involves:
 
 ## Roadmap
 
-- [ ] Support for DeepSeek
+- [x] Support for DeepSeek
 - [ ] Support for image input
 - [ ] Support for streaming
 - [ ] Better error handling

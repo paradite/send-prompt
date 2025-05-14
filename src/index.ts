@@ -162,7 +162,10 @@ type FirstPartyProviderOptions = BaseSendPromptOptions & {
 };
 
 type BuiltInBaseURLProviderOptions = BaseSendPromptOptions & {
-  provider: typeof AI_PROVIDERS.OPENROUTER | typeof AI_PROVIDERS.FIREWORKS;
+  provider:
+    | typeof AI_PROVIDERS.OPENROUTER
+    | typeof AI_PROVIDERS.FIREWORKS
+    | typeof AI_PROVIDERS.DEEPSEEK;
   model: string;
   apiKey: string;
 };
@@ -400,6 +403,9 @@ export async function sendPrompt(
   } else if (options.provider === AI_PROVIDERS.OPENROUTER) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
+  } else if (options.provider === AI_PROVIDERS.DEEPSEEK) {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
   } else if (options.provider === "custom") {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
@@ -533,6 +539,7 @@ export async function sendPrompt(
     }
 
     case AI_PROVIDERS.OPENROUTER:
+    case AI_PROVIDERS.DEEPSEEK:
     case AI_PROVIDERS.FIREWORKS: {
       if (!isTransformedOpenAI(transformed)) {
         throw new Error(
