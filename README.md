@@ -86,6 +86,18 @@ const googleResponse = await sendPrompt({
   systemPrompt: "You are a helpful assistant.",
 });
 
+// Google Vertex AI (requires gcloud CLI authentication)
+// https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal
+const googleVertexResponse = await sendPrompt({
+  messages: [{ role: "user", content: "Hello, who are you?" }],
+  model: ModelEnum["gemini-2.5-pro-exp-03-25"],
+  provider: AI_PROVIDERS.GOOGLE,
+  vertexai: true,
+  project: process.env.GOOGLE_CLOUD_PROJECT!, // Your Google Cloud project ID
+  location: process.env.GOOGLE_CLOUD_LOCATION!, // Your Google Cloud location (e.g., "us-central1")
+  systemPrompt: "You are a helpful assistant.",
+});
+
 // OpenRouter
 const openrouterResponse = await sendPrompt({
   messages: [{ role: "user", content: "Hello, who are you?" }],
@@ -116,11 +128,6 @@ const customResponse = await sendPrompt({
 
 // All responses have the same structure
 console.log(openaiResponse.message.content);
-console.log(anthropicResponse.message.content);
-console.log(googleResponse.message.content);
-console.log(openrouterResponse.message.content);
-console.log(fireworksResponse.message.content);
-console.log(customResponse.message.content);
 ```
 
 ### Function Calling
