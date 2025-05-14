@@ -1,4 +1,4 @@
-import { sendPrompt } from "./index";
+import { sendPrompt } from "../index";
 import { ModelEnum } from "llm-info";
 
 describe("sendPrompt", () => {
