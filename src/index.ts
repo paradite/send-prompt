@@ -125,23 +125,16 @@ export type StandardizedResponse = {
     content: string;
   };
   tool_calls?: FunctionCall[];
+  usage?: {
+    completionTokens: number;
+    promptTokens: number;
+    totalTokens: number;
+    thoughtsTokens: number;
+  };
 };
 
-export type OpenAIChatCompletionResponse = {
-  choices: Array<{
-    message: {
-      content: string | null;
-      tool_calls?: Array<{
-        id: string;
-        type: "function";
-        function: {
-          name: string;
-          arguments: string;
-        };
-      }>;
-    };
-  }>;
-};
+export type OpenAIChatCompletionResponse =
+  OpenAI.Chat.Completions.ChatCompletion;
 
 export type AnthropicAPIResponse = Anthropic.Messages.Message;
 
@@ -326,6 +319,21 @@ function transformOpenAIResponse(
     }));
   }
 
+  if (response.usage) {
+    const {
+      prompt_tokens,
+      completion_tokens,
+      total_tokens,
+      completion_tokens_details,
+    } = response.usage;
+    standardizedResponse.usage = {
+      promptTokens: prompt_tokens,
+      completionTokens: completion_tokens,
+      totalTokens: total_tokens,
+      thoughtsTokens: completion_tokens_details?.reasoning_tokens || 0,
+    };
+  }
+
   return standardizedResponse;
 }
 
@@ -362,6 +370,26 @@ function transformAnthropicResponse(
     standardizedResponse.tool_calls = toolCalls;
   }
 
+  if (response.usage) {
+    const {
+      input_tokens,
+      output_tokens,
+      cache_creation_input_tokens,
+      cache_read_input_tokens,
+    } = response.usage;
+    standardizedResponse.usage = {
+      promptTokens: input_tokens,
+      completionTokens: output_tokens,
+      totalTokens:
+        input_tokens +
+        (cache_creation_input_tokens || 0) +
+        (cache_read_input_tokens || 0) +
+        output_tokens,
+      // Anthropic doesn't return thoughts tokens
+      thoughtsTokens: 0,
+    };
+  }
+
   return standardizedResponse;
 }
 
@@ -383,13 +411,30 @@ function transformGoogleResponse(
     }));
   }
 
-  return {
+  const standardizedResponse: StandardizedResponse = {
     message: {
       role: "assistant",
       content: response.text || "",
     },
     ...(tool_calls ? { tool_calls } : {}),
   };
+
+  if (response.usageMetadata) {
+    const {
+      promptTokenCount,
+      candidatesTokenCount,
+      totalTokenCount,
+      thoughtsTokenCount,
+    } = response.usageMetadata;
+    standardizedResponse.usage = {
+      promptTokens: promptTokenCount || 0,
+      completionTokens: candidatesTokenCount || 0,
+      totalTokens: totalTokenCount || 0,
+      thoughtsTokens: thoughtsTokenCount || 0,
+    };
+  }
+
+  return standardizedResponse;
 }
 
 export async function sendPrompt(
