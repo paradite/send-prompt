@@ -428,7 +428,7 @@ function transformGoogleResponse(
     } = response.usageMetadata;
     standardizedResponse.usage = {
       promptTokens: promptTokenCount || 0,
-      completionTokens: candidatesTokenCount || 0,
+      completionTokens: (candidatesTokenCount || 0) + (thoughtsTokenCount || 0),
       totalTokens: totalTokenCount || 0,
       thoughtsTokens: thoughtsTokenCount || 0,
     };

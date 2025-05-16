@@ -26,7 +26,16 @@ describe("DeepSeek Provider", () => {
       );
 
       expect(response.message.content).toBeTruthy();
+      expect(response.usage).toBeDefined();
+      expect(response.usage?.promptTokens).toBeGreaterThan(0);
+      expect(response.usage?.completionTokens).toBeGreaterThan(0);
+      expect(response.usage?.totalTokens).toBeGreaterThan(0);
+      expect(response.usage?.totalTokens).toBe(
+        (response.usage?.promptTokens || 0) +
+          (response.usage?.completionTokens || 0)
+      );
       console.log("DeepSeek Response:", response.message.content);
+      console.log("DeepSeek Usage:", response.usage);
 
       const systemPromptResponse = await sendPrompt(
         {
@@ -44,10 +53,19 @@ describe("DeepSeek Provider", () => {
       expect(systemPromptResponse.message.content).toContain(
         "I am a DeepSeek assistant"
       );
+      expect(systemPromptResponse.usage).toBeDefined();
+      expect(systemPromptResponse.usage?.promptTokens).toBeGreaterThan(0);
+      expect(systemPromptResponse.usage?.completionTokens).toBeGreaterThan(0);
+      expect(systemPromptResponse.usage?.totalTokens).toBeGreaterThan(0);
+      expect(systemPromptResponse.usage?.totalTokens).toBe(
+        (systemPromptResponse.usage?.promptTokens || 0) +
+          (systemPromptResponse.usage?.completionTokens || 0)
+      );
       console.log(
         "DeepSeek System Prompt Response:",
         systemPromptResponse.message.content
       );
+      console.log("DeepSeek System Prompt Usage:", systemPromptResponse.usage);
     },
     30000
   );
