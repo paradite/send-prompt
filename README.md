@@ -299,12 +299,37 @@ if (response.reasoning) {
 }
 ```
 
-The response structure includes:
+### Response Format
+
+The response from `sendPrompt` follows a standardized format across all providers:
 
 - `message`: The main response content
 - `tool_calls`: Any function calls made by the model
 - `reasoning`: The model's reasoning process (if available)
 - `usage`: Token usage information
+  - `promptTokens`: Number of tokens in the input messages
+  - `thoughtsTokens`: Number of tokens used for reasoning (if available)
+  - `completionTokens`: Number of tokens in the model's response (includes thoughts tokens)
+  - `totalTokens`: Total tokens used (includes thoughts tokens)
+- `durationMs`: The time taken by the API call in milliseconds
+
+Example response:
+
+```typescript
+{
+  message: {
+    role: "assistant",
+    content: "I am a helpful assistant."
+  },
+  usage: {
+    completionTokens: 10,
+    promptTokens: 20,
+    totalTokens: 30,
+    thoughtsTokens: 0
+  },
+  durationMs: 1234
+}
+```
 
 ### Multi-round Tool Calls (Google)
 

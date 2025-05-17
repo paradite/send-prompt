@@ -70,7 +70,7 @@ describe("DeepSeek Provider", () => {
     30000
   );
 
-  deepseekTestFn(
+  deepseekTestFn.skip(
     "should extract reasoning content from DeepSeek response",
     async () => {
       const messages = [

@@ -2,7 +2,15 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
-## [2.1.0] - 2025-05-14
+## [2.0.2] - 2025-05-17
+
+### New Features ✨
+
+- Support for reasoning extraction for DeepSeek via `reasoning` in response
+- Support for `usage` in response
+- Support for `durationMs` in response
+
+## [2.0.1] - 2025-05-14
 
 ### New Features ✨
 
