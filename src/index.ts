@@ -458,21 +458,60 @@ function isTransformedGoogle(
   return messages.provider === AI_PROVIDERS.GOOGLE;
 }
 
+function extractReasoningFromTags(content: string): {
+  reasoning: string | undefined;
+  cleanedContent: string;
+} {
+  // Match content between <think> or <thinking> tags
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
+  const thinkingMatch = content.match(/<thinking>([\s\S]*?)<\/thinking>/i);
+
+  let reasoning: string | undefined;
+  let cleanedContent = content;
+
+  // Return the first match found
+  if (thinkMatch) {
+    reasoning = thinkMatch[1].trim();
+    cleanedContent = content.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
+  } else if (thinkingMatch) {
+    reasoning = thinkingMatch[1].trim();
+    cleanedContent = content
+      .replace(/<thinking>[\s\S]*?<\/thinking>/i, "")
+      .trim();
+  }
+
+  return { reasoning, cleanedContent };
+}
+
 function transformOpenAIResponse(
   response: OpenAIChatCompletionResponse
 ): Omit<StandardizedResponse, "durationMs"> {
   const message = response.choices[0].message;
+  const content = message.content || "";
 
   const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
     message: {
       role: "assistant",
-      content: message.content || "",
+      content: content,
     },
   };
 
   // Extract reasoning content if available
   if ("reasoning_content" in message) {
+    // DeepSeek
+    // https://api-docs.deepseek.com/guides/reasoning_model
     standardizedResponse.reasoning = (message as any).reasoning_content;
+  } else if ("reasoning" in message) {
+    // OpenRouter
+    // https://openrouter.ai/docs/use-cases/reasoning-tokens
+    standardizedResponse.reasoning = (message as any).reasoning;
+  } else {
+    // Try to extract reasoning from tags if not found in reasoning_content
+    const { reasoning, cleanedContent } = extractReasoningFromTags(content);
+    if (reasoning) {
+      standardizedResponse.reasoning = reasoning;
+      standardizedResponse.message.content = cleanedContent;
+    }
   }
 
   if (message.tool_calls && message.tool_calls.length > 0) {
