@@ -2,12 +2,16 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
-## [2.1.0] - 2025-05-18
+## [2.1.1] - 2025-05-17
 
 ### New Features ✨
 
 - Support for image input in messages
 - Image input is supported in OpenAI, Anthropic, Google, and OpenRouter providers
+
+### Bug Fixes 🐛
+
+- Fixed Azure OpenAI model type to be string
 
 ## [2.0.4] - 2025-05-17
 
