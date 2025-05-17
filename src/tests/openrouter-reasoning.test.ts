@@ -5,7 +5,8 @@ import { sendPrompt } from "../index";
 const openRouterTestFn = process.env.OPENROUTER_API_KEY ? test : test.skip;
 
 describe("OpenRouter Reasoning Extraction", () => {
-  const openRouterModel = "qwen/qwen3-235b-a22b";
+  //   const openRouterModel = "qwen/qwen3-235b-a22b";
+  const openRouterModel = "qwen/qwen3-8b:free";
 
   openRouterTestFn(
     "should extract reasoning from <think> tags",

@@ -5,7 +5,8 @@ import { sendPrompt } from "../index";
 const fireworksTestFn = process.env.FIREWORKS_API_KEY ? test : test.skip;
 
 describe("Fireworks Reasoning Extraction", () => {
-  const fireworksModel = "accounts/fireworks/models/qwen3-235b-a22b";
+  //   const fireworksModel = "accounts/fireworks/models/qwen3-235b-a22b";
+  const fireworksModel = "accounts/fireworks/models/deepseek-r1";
 
   fireworksTestFn(
     "should extract reasoning from <think> tags",
