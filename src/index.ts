@@ -14,6 +14,10 @@ import {
   FunctionResponse as GoogleFunctionResponse,
 } from "@google/genai";
 import { processBase64Image } from "./utils/image";
+import {
+  extractReasoningFromTags,
+  extractReasoningFromMessage,
+} from "./utils/reasoning";
 
 type TextContent = {
   type: "text";
@@ -458,31 +462,6 @@ function isTransformedGoogle(
   return messages.provider === AI_PROVIDERS.GOOGLE;
 }
 
-function extractReasoningFromTags(content: string): {
-  reasoning: string | undefined;
-  cleanedContent: string;
-} {
-  // Match content between <think> or <thinking> tags
-  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
-  const thinkingMatch = content.match(/<thinking>([\s\S]*?)<\/thinking>/i);
-
-  let reasoning: string | undefined;
-  let cleanedContent = content;
-
-  // Return the first match found
-  if (thinkMatch) {
-    reasoning = thinkMatch[1].trim();
-    cleanedContent = content.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
-  } else if (thinkingMatch) {
-    reasoning = thinkingMatch[1].trim();
-    cleanedContent = content
-      .replace(/<thinking>[\s\S]*?<\/thinking>/i, "")
-      .trim();
-  }
-
-  return { reasoning, cleanedContent };
-}
-
 function transformOpenAIResponse(
   response: OpenAIChatCompletionResponse
 ): Omit<StandardizedResponse, "durationMs"> {
@@ -497,14 +476,9 @@ function transformOpenAIResponse(
   };
 
   // Extract reasoning content if available
-  if ("reasoning_content" in message) {
-    // DeepSeek
-    // https://api-docs.deepseek.com/guides/reasoning_model
-    standardizedResponse.reasoning = (message as any).reasoning_content;
-  } else if ("reasoning" in message) {
-    // OpenRouter
-    // https://openrouter.ai/docs/use-cases/reasoning-tokens
-    standardizedResponse.reasoning = (message as any).reasoning;
+  const reasoning = extractReasoningFromMessage(message);
+  if (reasoning) {
+    standardizedResponse.reasoning = reasoning;
   } else {
     // Try to extract reasoning from tags if not found in reasoning_content
     const { reasoning, cleanedContent } = extractReasoningFromTags(content);

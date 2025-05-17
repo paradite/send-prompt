@@ -2,7 +2,7 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
-## [2.1.1] - 2025-05-17
+## [2.1.2] - 2025-05-17
 
 ### New Features ✨
 
@@ -10,7 +10,7 @@ All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 - Image input is supported in OpenAI, Anthropic, Google, and OpenRouter providers
 - Support for Azure OpenAI provider
 - Support for `anthropicMaxTokens` in prompt options
-- Support for reasoning extraction for DeepSeek via `reasoning` in response
+- Support for automatic reasoning extraction for DeepSeek, OpenRouter, and Fireworks
 - Support for `usage` in response
 - Support for `durationMs` in response
 
