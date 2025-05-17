@@ -1,6 +1,6 @@
 {
   "name": "send-prompt",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A unified TypeScript library for AI model interactions with standardized interfaces and function calling.",
   "main": "dist/index.js",
   "type": "module",

@@ -272,7 +272,7 @@ export type GoogleVertexAIProviderOptions = {
 
 export type AzureOpenAIProviderOptions = {
   provider: typeof AI_PROVIDERS.AZURE_OPENAI;
-  model: ModelEnum;
+  model: string;
   apiKey: string;
   endpoint: string;
   deployment: string;
