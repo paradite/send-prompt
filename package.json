@@ -20,8 +20,8 @@
   "scripts": {
     "compile": "tsup src/index.ts --dts --format esm,cjs",
     "prepublishOnly": "rm -rf ./dist && npm run compile",
-    "test:debug": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
-    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --silent"
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+    "test:ci": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --silent"
   },
   "repository": {
     "type": "git",

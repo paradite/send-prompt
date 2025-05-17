@@ -70,4 +70,32 @@ describe("Anthropic Provider", () => {
     },
     30000
   );
+
+  anthropicTestFn(
+    "should respect anthropicMaxTokens option",
+    async () => {
+      const messages = [
+        { role: "user" as const, content: "Write a very long story." },
+      ];
+
+      const response = await sendPrompt(
+        {
+          messages,
+          anthropicMaxTokens: 100, // Set a small max tokens to limit response length
+        },
+        {
+          model: anthropicModel,
+          provider: AI_PROVIDERS.ANTHROPIC,
+          apiKey: process.env.ANTHROPIC_API_KEY!,
+        }
+      );
+
+      expect(response.message.content).toBeTruthy();
+      expect(response.usage).toBeDefined();
+      expect(response.usage?.completionTokens).toBeLessThanOrEqual(100);
+      console.log("Anthropic MaxTokens Response:", response.message.content);
+      console.log("Anthropic MaxTokens Usage:", response.usage);
+    },
+    30000
+  );
 });
