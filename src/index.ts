@@ -13,6 +13,7 @@ import {
   FunctionCall as GoogleFunctionCall,
   FunctionResponse as GoogleFunctionResponse,
 } from "@google/genai";
+import { processBase64Image } from "./utils/image";
 
 type TextContent = {
   type: "text";
@@ -289,33 +290,6 @@ export type TransformSupportedProvider =
   | typeof AI_PROVIDERS.OPENAI
   | typeof AI_PROVIDERS.ANTHROPIC
   | typeof AI_PROVIDERS.GOOGLE;
-
-type Base64ImageData = {
-  mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
-  base64Data: string;
-};
-
-function processBase64Image(url: string): Base64ImageData {
-  let mimeType: Base64ImageData["mimeType"] = "image/jpeg";
-  let base64Data = url;
-
-  if (url.startsWith("data:")) {
-    const match = url.match(/^data:image\/([^;]+);base64,(.*)$/);
-    if (match) {
-      const detectedType = match[1];
-      if (
-        detectedType === "png" ||
-        detectedType === "gif" ||
-        detectedType === "webp"
-      ) {
-        mimeType = `image/${detectedType}` as Base64ImageData["mimeType"];
-      }
-      base64Data = match[2];
-    }
-  }
-
-  return { mimeType, base64Data };
-}
 
 export function transformMessagesForProvider({
   messages,
