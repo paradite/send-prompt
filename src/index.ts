@@ -130,7 +130,7 @@ export type StandardizedResponse = {
     thoughtsTokens: number;
   };
   reasoning?: string;
-  durationMs?: number;
+  durationMs: number;
 };
 
 export type OpenAIChatCompletionResponse =
@@ -309,10 +309,10 @@ function isTransformedGoogle(
 
 function transformOpenAIResponse(
   response: OpenAIChatCompletionResponse
-): StandardizedResponse {
+): Omit<StandardizedResponse, "durationMs"> {
   const message = response.choices[0].message;
 
-  const standardizedResponse: StandardizedResponse = {
+  const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
     message: {
       role: "assistant",
       content: message.content || "",
@@ -355,8 +355,8 @@ function transformOpenAIResponse(
 
 function transformAnthropicResponse(
   response: AnthropicAPIResponse
-): StandardizedResponse {
-  const standardizedResponse: StandardizedResponse = {
+): Omit<StandardizedResponse, "durationMs"> {
+  const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
     message: {
       role: "assistant",
       content:
@@ -411,7 +411,7 @@ function transformAnthropicResponse(
 
 function transformGoogleResponse(
   response: GenerateContentResponse
-): StandardizedResponse {
+): Omit<StandardizedResponse, "durationMs"> {
   let tool_calls: FunctionCall[] | undefined = undefined;
   if (response.functionCalls && Array.isArray(response.functionCalls)) {
     tool_calls = response.functionCalls.map((call: GoogleFunctionCall) => ({
@@ -427,7 +427,7 @@ function transformGoogleResponse(
     }));
   }
 
-  const standardizedResponse: StandardizedResponse = {
+  const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
     message: {
       role: "assistant",
       content: response.text || "",
@@ -493,7 +493,7 @@ export async function sendPrompt(
     systemRole,
   });
 
-  let response: StandardizedResponse;
+  let response: Omit<StandardizedResponse, "durationMs">;
   switch (providerOptions.provider) {
     case AI_PROVIDERS.OPENAI: {
       if (!isTransformedOpenAI(transformed)) {

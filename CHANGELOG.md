@@ -2,6 +2,12 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.0.4] - 2025-05-17
+
+### New Features ✨
+
+- Make `durationMs` mandatory type in response
+
 ## [2.0.3] - 2025-05-17
 
 ### New Features ✨
