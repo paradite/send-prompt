@@ -6,33 +6,17 @@ All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
 ### New Features ✨
 
-- Support for image input in messages
+- Support for image input
 - Image input is supported in OpenAI, Anthropic, Google, and OpenRouter providers
+- Support for Azure OpenAI provider
+- Support for `anthropicMaxTokens` in prompt options
+- Support for reasoning extraction for DeepSeek via `reasoning` in response
+- Support for `usage` in response
+- Support for `durationMs` in response
 
 ### Bug Fixes 🐛
 
 - Fixed Azure OpenAI model type to be string
-
-## [2.0.4] - 2025-05-17
-
-### New Features ✨
-
-- Make `durationMs` mandatory type in response
-
-## [2.0.3] - 2025-05-17
-
-### New Features ✨
-
-- Support for Azure OpenAI provider
-- Support for `anthropicMaxTokens` in prompt options
-
-## [2.0.2] - 2025-05-17
-
-### New Features ✨
-
-- Support for reasoning extraction for DeepSeek via `reasoning` in response
-- Support for `usage` in response
-- Support for `durationMs` in response
 
 ## [2.0.1] - 2025-05-14
 
