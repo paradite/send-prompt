@@ -4,7 +4,7 @@ import {
   ModelInfoMap,
   AI_PROVIDER_CONFIG,
 } from "llm-info";
-import { OpenAI } from "openai";
+import { OpenAI, AzureOpenAI } from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   GoogleGenAI,
@@ -184,11 +184,21 @@ export type GoogleVertexAIProviderOptions = {
   location: string;
 };
 
+export type AzureOpenAIProviderOptions = {
+  provider: typeof AI_PROVIDERS.AZURE_OPENAI;
+  model: ModelEnum;
+  apiKey: string;
+  endpoint: string;
+  deployment: string;
+  apiVersion: string;
+} & HeadersOptions;
+
 export type ProviderOptions =
   | FirstPartyProviderOptions
   | BaseURLProviderOptions
   | CustomProviderOptions
-  | GoogleVertexAIProviderOptions;
+  | GoogleVertexAIProviderOptions
+  | AzureOpenAIProviderOptions;
 
 export type TransformSupportedProvider =
   | typeof AI_PROVIDERS.OPENAI
@@ -467,6 +477,9 @@ export async function sendPrompt(
   } else if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
     providerToTransform = AI_PROVIDERS.GOOGLE;
     systemRole = "system";
+  } else if (providerOptions.provider === AI_PROVIDERS.AZURE_OPENAI) {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
   } else if (providerOptions.provider === "custom") {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
@@ -680,6 +693,35 @@ export async function sendPrompt(
       });
 
       response = transformOpenAIResponse(openaiResponse);
+      break;
+    }
+
+    case AI_PROVIDERS.AZURE_OPENAI: {
+      if (!isTransformedOpenAI(transformed)) {
+        throw new Error(
+          "Messages were not properly transformed for Azure OpenAI"
+        );
+      }
+      const azureOpenAI = new AzureOpenAI({
+        apiKey: providerOptions.apiKey,
+        endpoint: providerOptions.endpoint,
+        apiVersion: providerOptions.apiVersion,
+        deployment: providerOptions.deployment,
+        dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
+      });
+      const azureOpenAIResponse = await azureOpenAI.chat.completions.create({
+        model: providerOptions.deployment,
+        messages: transformed.messages,
+        tools: tools?.map((tool: FunctionDefinition) => ({
+          type: tool.type,
+          function: tool.function,
+        })),
+      });
+
+      response = transformOpenAIResponse(azureOpenAIResponse);
       break;
     }
   }

@@ -14,8 +14,8 @@ Related projects:
 ## Features
 
 - 🔄 Unified interface with comprehensive model support:
-  - First-party providers (OpenAI, Anthropic, Google)
-  - Third-party providers (OpenRouter, Fireworks, DeepSeek)
+  - First-party providers (OpenAI, Anthropic, Google, DeepSeek)
+  - Third-party providers (Vertex AI, Azure OpenAI, OpenRouter, Fireworks)
   - Custom providers with OpenAI-compatible API
 - 🔧 Supports function calling and system prompt
 - 📝 Standardized message format and response structure
