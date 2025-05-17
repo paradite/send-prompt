@@ -14,23 +14,43 @@ import {
   FunctionResponse as GoogleFunctionResponse,
 } from "@google/genai";
 
-type BaseMessage = {
+type TextContent = {
+  type: "text";
+  text: string;
+};
+
+type ImageContent = {
+  type: "image_url";
+  image_url: {
+    url: string;
+  };
+};
+
+type BaseImageMessage = {
+  content: (ImageContent | TextContent)[];
+};
+
+type BaseTextMessage = {
   content: string;
 };
 
-export type UserMessage = BaseMessage & {
+export type UserTextMessage = BaseTextMessage & {
   role: "user";
 };
 
-export type AssistantMessage = BaseMessage & {
+export type UserImageMessage = BaseImageMessage & {
+  role: "user";
+};
+
+export type AssistantTextMessage = BaseTextMessage & {
   role: "assistant";
 };
 
-export type DeveloperMessage = BaseMessage & {
+export type DeveloperMessage = BaseTextMessage & {
   role: "developer";
 };
 
-export type SystemMessage = BaseMessage & {
+export type SystemMessage = BaseTextMessage & {
   role: "system";
 };
 
@@ -51,19 +71,23 @@ export type GoogleFunctionResponseMessage = {
 };
 
 export type InputMessage =
-  | UserMessage
-  | AssistantMessage
+  | UserTextMessage
+  | UserImageMessage
+  | AssistantTextMessage
   | GoogleFunctionCallMessage
   | GoogleFunctionResponseMessage;
 
 export type OpenAIMessage =
-  | UserMessage
-  | AssistantMessage
+  | UserTextMessage
+  | UserImageMessage
+  | AssistantTextMessage
   | DeveloperMessage
   | SystemMessage;
 
-export type AnthropicMessage = UserMessage | AssistantMessage;
+// TODO: support image messages for anthropic
+export type AnthropicMessage = UserTextMessage | AssistantTextMessage;
 
+// TODO: support image messages for google
 export type GoogleMessage = {
   role: "user" | "model";
   parts: (
@@ -72,6 +96,39 @@ export type GoogleMessage = {
     | { functionResponse: GoogleFunctionResponse }
   )[];
 };
+
+// helper predicate to check if a message is google message
+function isGoogleMessage(
+  message:
+    | UserTextMessage
+    | UserImageMessage
+    | AssistantTextMessage
+    | DeveloperMessage
+    | SystemMessage
+    | GoogleMessage
+): message is GoogleMessage {
+  return (
+    (message.role === "user" || message.role === "model") &&
+    "parts" in message &&
+    !("content" in message)
+  );
+}
+
+// helper predicate to check if a message is a user text message
+function isUserTextMessage(
+  message:
+    | UserTextMessage
+    | UserImageMessage
+    | AssistantTextMessage
+    | DeveloperMessage
+    | SystemMessage
+    | GoogleMessage
+): message is UserTextMessage {
+  if (isGoogleMessage(message)) {
+    return false;
+  }
+  return typeof message.content === "string";
+}
 
 export type FunctionCall = {
   id: string;
@@ -217,20 +274,17 @@ export function transformMessagesForProvider({
 }): TransformedMessages {
   switch (provider) {
     case AI_PROVIDERS.OPENAI: {
-      const openaiMessages: OpenAIMessage[] = messages
-        .filter(
-          (msg) =>
-            msg.role !== "google_function_call" &&
-            msg.role !== "google_function_response"
-        )
-        .map(({ role, content }) => {
-          return { role, content };
-        });
+      const openaiMessages: OpenAIMessage[] = messages.filter(
+        (msg) =>
+          msg.role !== "google_function_call" &&
+          msg.role !== "google_function_response"
+      );
       if (systemPrompt) {
-        openaiMessages.unshift({
+        const systemMessage: SystemMessage | DeveloperMessage = {
           role: systemRole,
           content: systemPrompt,
-        });
+        };
+        openaiMessages.unshift(systemMessage);
       }
       return {
         provider: AI_PROVIDERS.OPENAI,
@@ -244,9 +298,7 @@ export function transformMessagesForProvider({
             msg.role !== "google_function_call" &&
             msg.role !== "google_function_response"
         )
-        .map(({ role, content }) => {
-          return { role, content };
-        });
+        .filter(isUserTextMessage);
       return {
         provider: AI_PROVIDERS.ANTHROPIC,
         messages: anthropicMessages,
@@ -254,29 +306,44 @@ export function transformMessagesForProvider({
     }
     case AI_PROVIDERS.GOOGLE: {
       // Convert messages to Gemini format
-      const googleMessages: GoogleMessage[] = messages.map((msg) => {
-        if (msg.role === "google_function_call") {
-          // https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
-          const functionCall: GoogleFunctionCall = {
-            id: msg.id,
-            args: msg.args,
-            name: msg.name,
+      const googleMessages: GoogleMessage[] = messages
+        .map((msg) => {
+          if (msg.role === "google_function_call") {
+            // https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
+            const functionCall: GoogleFunctionCall = {
+              id: msg.id,
+              args: msg.args,
+              name: msg.name,
+            };
+            const functionCallMessage: GoogleMessage = {
+              role: "model",
+              parts: [{ functionCall }],
+            };
+            return functionCallMessage;
+          } else if (msg.role === "google_function_response") {
+            // https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
+            const functionResponse: GoogleFunctionResponse = {
+              id: msg.id,
+              name: msg.name,
+              response: msg.response,
+            };
+            const functionResponseMessage: GoogleMessage = {
+              role: "user",
+              parts: [{ functionResponse }],
+            };
+            return functionResponseMessage;
+          }
+          const role: "user" | "model" =
+            msg.role === "assistant" ? "model" : msg.role;
+
+          // TODO: ignore image content for google for now
+          const text = typeof msg.content === "string" ? msg.content : "";
+          return {
+            role,
+            parts: [{ text }],
           };
-          return { role: "model", parts: [{ functionCall }] };
-        } else if (msg.role === "google_function_response") {
-          // https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
-          const functionResponse: GoogleFunctionResponse = {
-            id: msg.id,
-            name: msg.name,
-            response: msg.response,
-          };
-          return { role: "user", parts: [{ functionResponse }] };
-        }
-        return {
-          role: msg.role === "assistant" ? "model" : msg.role,
-          parts: [{ text: msg.content }],
-        };
-      });
+        })
+        .filter(isUserTextMessage);
       return {
         provider: AI_PROVIDERS.GOOGLE,
         messages: googleMessages,
