@@ -13,14 +13,16 @@ Related projects:
 
 ## Features
 
-- 🔄 Unified interface for all major providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek)
-- 🤖 Support for latest models (GPT-4.1, Claude 3.7 Sonnet, Gemini 2.5 Pro)
+- 🔄 Unified interface with comprehensive model support:
+  - First-party providers (OpenAI, Anthropic, Google)
+  - Third-party providers (OpenRouter, Fireworks, DeepSeek)
+  - Custom providers with OpenAI-compatible API
 - 🔧 Supports function calling and system prompt
 - 📝 Standardized message format and response structure
 - 🛠️ Full TypeScript support for type safety
-- 🎯 No extra dependencies required except `llm-info` and `send-prompt`
+- 🎯 No additional dependencies for each provider
 - 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
-- 🔌 Supports custom providers with OpenAI-compatible API
+- 🎨 Provider specific options (headers, reasoning extraction)
 
 ## Quick Demo
 
@@ -250,6 +252,59 @@ if (response.tool_calls) {
   console.log("Arguments:", JSON.parse(toolCall.function.arguments));
 }
 ```
+
+### Provider Options
+
+#### Headers
+
+You can pass custom headers to providers using the `headers` option:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello" }],
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-api-key",
+    headers: {
+      "Custom-Header": "value",
+      "X-Title": "My App",
+    },
+  }
+);
+```
+
+#### Reasoning Extraction
+
+For providers that support it (like DeepSeek), you can extract the model's reasoning from the response:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [
+      { role: "user", content: "Solve this math problem: 2x + 5 = 15" },
+    ],
+  },
+  {
+    model: ModelEnum["deepseek-reasoner"],
+    provider: AI_PROVIDERS.DEEPSEEK,
+    apiKey: "your-api-key",
+  }
+);
+
+if (response.reasoning) {
+  console.log("Model's reasoning:", response.reasoning);
+}
+```
+
+The response structure includes:
+
+- `message`: The main response content
+- `tool_calls`: Any function calls made by the model
+- `reasoning`: The model's reasoning process (if available)
+- `usage`: Token usage information
 
 ### Multi-round Tool Calls (Google)
 
