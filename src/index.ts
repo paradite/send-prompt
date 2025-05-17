@@ -84,8 +84,20 @@ export type OpenAIMessage =
   | DeveloperMessage
   | SystemMessage;
 
-// TODO: support image messages for anthropic
-export type AnthropicMessage = UserTextMessage | AssistantTextMessage;
+export type AnthropicMessage = {
+  role: "user" | "assistant";
+  content: (
+    | { type: "text"; text: string }
+    | {
+        type: "image";
+        source: {
+          type: "base64";
+          media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+          data: string;
+        };
+      }
+  )[];
+};
 
 // TODO: support image messages for google
 export type GoogleMessage = {
@@ -128,6 +140,22 @@ function isUserTextMessage(
     return false;
   }
   return typeof message.content === "string";
+}
+
+// helper predicate to check if a message is a user image message
+function isUserImageMessage(
+  message:
+    | UserTextMessage
+    | UserImageMessage
+    | AssistantTextMessage
+    | DeveloperMessage
+    | SystemMessage
+    | GoogleMessage
+): message is UserImageMessage {
+  if (isGoogleMessage(message)) {
+    return false;
+  }
+  return Array.isArray(message.content);
 }
 
 export type FunctionCall = {
@@ -298,7 +326,59 @@ export function transformMessagesForProvider({
             msg.role !== "google_function_call" &&
             msg.role !== "google_function_response"
         )
-        .filter(isUserTextMessage);
+        .map((msg) => {
+          if (isUserImageMessage(msg)) {
+            // Convert UserImageMessage to AnthropicMessage format
+            return {
+              role: msg.role,
+              content: msg.content.map((content) => {
+                if (content.type === "text") {
+                  return content;
+                } else {
+                  const url = content.image_url.url;
+                  let mediaType:
+                    | "image/jpeg"
+                    | "image/png"
+                    | "image/gif"
+                    | "image/webp" = "image/jpeg";
+                  let base64Data = url;
+                  if (url.startsWith("data:")) {
+                    const match = url.match(
+                      /^data:image\/([^;]+);base64,(.*)$/
+                    );
+                    if (match) {
+                      const detectedType = match[1];
+                      if (
+                        detectedType === "png" ||
+                        detectedType === "gif" ||
+                        detectedType === "webp"
+                      ) {
+                        mediaType = `image/${detectedType}` as typeof mediaType;
+                      }
+                      base64Data = match[2];
+                    }
+                  }
+                  return {
+                    type: "image",
+                    source: {
+                      type: "base64",
+                      media_type: mediaType,
+                      data: base64Data,
+                    },
+                  };
+                }
+              }),
+            };
+          } else if (isUserTextMessage(msg)) {
+            return {
+              role: msg.role,
+              content: [{ type: "text", text: msg.content }],
+            };
+          }
+          throw new Error(
+            `Unsupported message type for Anthropic: ${msg.role}`
+          );
+        });
       return {
         provider: AI_PROVIDERS.ANTHROPIC,
         messages: anthropicMessages,
