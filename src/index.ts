@@ -106,6 +106,7 @@ export type GoogleMessage = {
     | { text: string }
     | { functionCall: GoogleFunctionCall }
     | { functionResponse: GoogleFunctionResponse }
+    | { inlineData: { mimeType: string; data: string } }
   )[];
 };
 
@@ -289,6 +290,33 @@ export type TransformSupportedProvider =
   | typeof AI_PROVIDERS.ANTHROPIC
   | typeof AI_PROVIDERS.GOOGLE;
 
+type Base64ImageData = {
+  mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+  base64Data: string;
+};
+
+function processBase64Image(url: string): Base64ImageData {
+  let mimeType: Base64ImageData["mimeType"] = "image/jpeg";
+  let base64Data = url;
+
+  if (url.startsWith("data:")) {
+    const match = url.match(/^data:image\/([^;]+);base64,(.*)$/);
+    if (match) {
+      const detectedType = match[1];
+      if (
+        detectedType === "png" ||
+        detectedType === "gif" ||
+        detectedType === "webp"
+      ) {
+        mimeType = `image/${detectedType}` as Base64ImageData["mimeType"];
+      }
+      base64Data = match[2];
+    }
+  }
+
+  return { mimeType, base64Data };
+}
+
 export function transformMessagesForProvider({
   messages,
   provider,
@@ -335,34 +363,14 @@ export function transformMessagesForProvider({
                 if (content.type === "text") {
                   return content;
                 } else {
-                  const url = content.image_url.url;
-                  let mediaType:
-                    | "image/jpeg"
-                    | "image/png"
-                    | "image/gif"
-                    | "image/webp" = "image/jpeg";
-                  let base64Data = url;
-                  if (url.startsWith("data:")) {
-                    const match = url.match(
-                      /^data:image\/([^;]+);base64,(.*)$/
-                    );
-                    if (match) {
-                      const detectedType = match[1];
-                      if (
-                        detectedType === "png" ||
-                        detectedType === "gif" ||
-                        detectedType === "webp"
-                      ) {
-                        mediaType = `image/${detectedType}` as typeof mediaType;
-                      }
-                      base64Data = match[2];
-                    }
-                  }
+                  const { mimeType, base64Data } = processBase64Image(
+                    content.image_url.url
+                  );
                   return {
                     type: "image",
                     source: {
                       type: "base64",
-                      media_type: mediaType,
+                      media_type: mimeType,
                       data: base64Data,
                     },
                   };
@@ -416,14 +424,36 @@ export function transformMessagesForProvider({
           const role: "user" | "model" =
             msg.role === "assistant" ? "model" : msg.role;
 
-          // TODO: ignore image content for google for now
-          const text = typeof msg.content === "string" ? msg.content : "";
-          return {
-            role,
-            parts: [{ text }],
-          };
+          if (isUserImageMessage(msg)) {
+            // Convert UserImageMessage to GoogleMessage format
+            const parts = msg.content.map((content) => {
+              if (content.type === "text") {
+                return { text: content.text };
+              } else {
+                const { mimeType, base64Data } = processBase64Image(
+                  content.image_url.url
+                );
+                return {
+                  inlineData: {
+                    mimeType,
+                    data: base64Data,
+                  },
+                };
+              }
+            });
+            return {
+              role,
+              parts,
+            };
+          } else if (isUserTextMessage(msg)) {
+            return {
+              role,
+              parts: [{ text: msg.content }],
+            };
+          }
+          throw new Error(`Unsupported message type for Google: ${msg.role}`);
         })
-        .filter(isUserTextMessage);
+        .filter((msg) => msg.parts.length > 0);
       return {
         provider: AI_PROVIDERS.GOOGLE,
         messages: googleMessages,
