@@ -34,8 +34,11 @@ describe("OpenAI Provider", () => {
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
       );
+      expect(response.durationMs).toBeDefined();
+      expect(response.durationMs).toBeGreaterThan(0);
       console.log("OpenAI Response:", response.message.content);
       console.log("OpenAI Usage:", response.usage);
+      console.log("OpenAI Duration:", response.durationMs, "ms");
 
       const systemPromptResponse = await sendPrompt(
         {
@@ -61,11 +64,18 @@ describe("OpenAI Provider", () => {
         (systemPromptResponse.usage?.promptTokens || 0) +
           (systemPromptResponse.usage?.completionTokens || 0)
       );
+      expect(systemPromptResponse.durationMs).toBeDefined();
+      expect(systemPromptResponse.durationMs).toBeGreaterThan(0);
       console.log(
         "OpenAI System Prompt Response:",
         systemPromptResponse.message.content
       );
       console.log("OpenAI System Prompt Usage:", systemPromptResponse.usage);
+      console.log(
+        "OpenAI System Prompt Duration:",
+        systemPromptResponse.durationMs,
+        "ms"
+      );
     },
     30000
   );

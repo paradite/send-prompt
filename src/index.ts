@@ -132,6 +132,7 @@ export type StandardizedResponse = {
     thoughtsTokens: number;
   };
   reasoning?: string;
+  durationMs?: number;
 };
 
 export type OpenAIChatCompletionResponse =
@@ -447,6 +448,7 @@ export async function sendPrompt(
   promptOptions: PromptOptions,
   providerOptions: ProviderOptions
 ): Promise<StandardizedResponse> {
+  const startTime = Date.now();
   const { messages, systemPrompt, tools } = promptOptions;
   let providerToTransform: TransformSupportedProvider;
   let systemRole: "system" | "developer" = "developer";
@@ -479,6 +481,7 @@ export async function sendPrompt(
     systemRole,
   });
 
+  let response: StandardizedResponse;
   switch (providerOptions.provider) {
     case AI_PROVIDERS.OPENAI: {
       if (!isTransformedOpenAI(transformed)) {
@@ -491,7 +494,7 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
-      const response = await openai.chat.completions.create({
+      const openaiResponse = await openai.chat.completions.create({
         model: providerOptions.model,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
@@ -500,7 +503,8 @@ export async function sendPrompt(
         })),
       });
 
-      return transformOpenAIResponse(response);
+      response = transformOpenAIResponse(openaiResponse);
+      break;
     }
 
     case AI_PROVIDERS.ANTHROPIC: {
@@ -538,7 +542,8 @@ export async function sendPrompt(
         })),
         betas,
       });
-      return transformAnthropicResponse(claudeRes);
+      response = transformAnthropicResponse(claudeRes);
+      break;
     }
 
     case AI_PROVIDERS.GOOGLE:
@@ -599,13 +604,14 @@ export async function sendPrompt(
         };
       }
 
-      const response = await ai.models.generateContent({
+      const googleResponse = await ai.models.generateContent({
         model: providerOptions.model,
         contents: transformed.messages,
         config,
       });
 
-      return transformGoogleResponse(response);
+      response = transformGoogleResponse(googleResponse);
+      break;
     }
 
     case AI_PROVIDERS.OPENROUTER:
@@ -624,7 +630,7 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
-      const response = await openai.chat.completions.create({
+      const openaiResponse = await openai.chat.completions.create({
         model: providerOptions.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
@@ -645,7 +651,8 @@ export async function sendPrompt(
       //   },
       //   user_id: 'user_xyz'
       // }
-      return transformOpenAIResponse(response);
+      response = transformOpenAIResponse(openaiResponse);
+      break;
     }
 
     case "custom": {
@@ -663,7 +670,7 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
-      const response = await openai.chat.completions.create({
+      const openaiResponse = await openai.chat.completions.create({
         model: providerOptions.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
@@ -672,7 +679,15 @@ export async function sendPrompt(
         })),
       });
 
-      return transformOpenAIResponse(response);
+      response = transformOpenAIResponse(openaiResponse);
+      break;
     }
   }
+
+  const endTime = Date.now();
+  const durationMs = endTime - startTime;
+  return {
+    ...response,
+    durationMs,
+  };
 }
