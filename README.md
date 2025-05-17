@@ -307,6 +307,26 @@ const response = await sendPrompt(
 );
 ```
 
+#### Anthropic Max Tokens
+
+For Anthropic models, you can control the maximum number of tokens in the response using the `anthropicMaxTokens` option:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Write a long story" }],
+    anthropicMaxTokens: 2000, // Limit response to 2000 tokens
+  },
+  {
+    model: ModelEnum["claude-3-7-sonnet-20250219"],
+    provider: AI_PROVIDERS.ANTHROPIC,
+    apiKey: "your-anthropic-api-key",
+  }
+);
+```
+
+If not specified, it will use the model's default output token limit or 4096 tokens, whichever is smaller. When using function calling, it will default to 4096 tokens.
+
 #### Reasoning Extraction
 
 For providers that support it (like DeepSeek), you can extract the model's reasoning from the response:
