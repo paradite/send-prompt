@@ -14,8 +14,6 @@ import {
   FunctionResponse as GoogleFunctionResponse,
 } from "@google/genai";
 
-const DEFAULT_MAX_TOKENS = 4096;
-
 type BaseMessage = {
   content: string;
 };
@@ -145,6 +143,7 @@ export type PromptOptions = {
   systemPrompt?: string;
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
+  anthropicMaxTokens?: number;
 };
 
 export type HeadersOptions = {
@@ -536,12 +535,19 @@ export async function sendPrompt(
         // use token-efficient-tools-2025-02-19 beta for claude-3-7-sonnet-20250219
         betas = ["token-efficient-tools-2025-02-19"];
       }
+
+      // Default value for max tokens in case anthropicMaxTokens is not provided
+      // Anthropic API requires max_tokens to be set
+      const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;
+
       let maxTokens =
+        promptOptions.anthropicMaxTokens ||
         ModelInfoMap[providerOptions.model].outputTokenLimit ||
-        DEFAULT_MAX_TOKENS;
+        ANTHROPIC_DEFAULT_MAX_TOKENS;
       if (tools && tools.length > 0) {
         // limit max tokens to default max tokens for function calling
-        maxTokens = DEFAULT_MAX_TOKENS;
+        maxTokens =
+          promptOptions.anthropicMaxTokens || ANTHROPIC_DEFAULT_MAX_TOKENS;
       }
       const claudeRes = await anthropic.beta.messages.create({
         model: providerOptions.model,

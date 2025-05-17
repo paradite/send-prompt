@@ -2,6 +2,13 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.0.3] - 2025-05-17
+
+### New Features ✨
+
+- Support for Azure OpenAI provider
+- Support for `anthropicMaxTokens` in prompt options
+
 ## [2.0.2] - 2025-05-17
 
 ### New Features ✨
