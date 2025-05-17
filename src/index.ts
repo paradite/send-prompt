@@ -724,6 +724,10 @@ export async function sendPrompt(
       response = transformOpenAIResponse(azureOpenAIResponse);
       break;
     }
+    default: {
+      const unknownProvider: never = providerOptions;
+      throw new Error(`Unhandled provider case: ${unknownProvider}`);
+    }
   }
 
   const endTime = Date.now();
