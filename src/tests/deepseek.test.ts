@@ -69,4 +69,39 @@ describe("DeepSeek Provider", () => {
     },
     30000
   );
+
+  deepseekTestFn(
+    "should extract reasoning content from DeepSeek response",
+    async () => {
+      const messages = [
+        { role: "user" as const, content: "9.11 and 9.8, which is greater?" },
+      ];
+
+      const response = await sendPrompt(
+        {
+          messages,
+        },
+        {
+          customModel: "deepseek-reasoner",
+          provider: AI_PROVIDERS.DEEPSEEK,
+          apiKey: process.env.DEEPSEEK_API_KEY!,
+        }
+      );
+
+      expect(response.message.content).toBeTruthy();
+      expect(response.reasoning).toBeTruthy();
+      expect(response.usage).toBeDefined();
+      expect(response.usage?.promptTokens).toBeGreaterThan(0);
+      expect(response.usage?.completionTokens).toBeGreaterThan(0);
+      expect(response.usage?.totalTokens).toBeGreaterThan(0);
+      expect(response.usage?.totalTokens).toBe(
+        (response.usage?.promptTokens || 0) +
+          (response.usage?.completionTokens || 0)
+      );
+      console.log("DeepSeek Response:", response.message.content);
+      console.log("DeepSeek Reasoning:", response.reasoning);
+      console.log("DeepSeek Usage:", response.usage);
+    },
+    60000
+  );
 });

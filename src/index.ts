@@ -131,6 +131,7 @@ export type StandardizedResponse = {
     totalTokens: number;
     thoughtsTokens: number;
   };
+  reasoning?: string;
 };
 
 export type OpenAIChatCompletionResponse =
@@ -307,6 +308,11 @@ function transformOpenAIResponse(
       content: message.content || "",
     },
   };
+
+  // Extract reasoning content if available
+  if ("reasoning_content" in message) {
+    standardizedResponse.reasoning = (message as any).reasoning_content;
+  }
 
   if (message.tool_calls && message.tool_calls.length > 0) {
     standardizedResponse.tool_calls = message.tool_calls.map((tool) => ({
