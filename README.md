@@ -23,6 +23,7 @@ Related projects:
 - 🎯 No additional dependencies for each provider
 - 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
 - 🎨 Provider specific options (headers, reasoning extraction)
+- 🖼️ Support for image input in messages (base64 and URL formats)
 
 ## Quick Demo
 
@@ -184,6 +185,36 @@ const customResponse = await sendPrompt(
 
 // All responses have the same structure
 console.log(openaiResponse.message.content);
+```
+
+### Image Input
+
+You can send images to models that support vision capabilities:
+
+```typescript
+const imageResponse = await sendPrompt(
+  {
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What's in this image?" },
+          {
+            type: "image_url",
+            image_url: {
+              url: "data:image/jpeg;base64,/9j/4AAQSkZJRg...", // base64 image data
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+  }
+);
 ```
 
 ### Function Calling
@@ -399,6 +430,6 @@ The multi-round tool calling process involves:
 ## Roadmap
 
 - [x] Support for DeepSeek
-- [ ] Support for image input
+- [x] Support for image input
 - [ ] Support for streaming
 - [ ] Better error handling
