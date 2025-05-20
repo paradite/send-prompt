@@ -2,6 +2,12 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.1.3] - 2025-05-20
+
+### New Features ✨
+
+- Support for `usage.thoughtsTokens` in response for OpenRouter
+
 ## [2.1.2] - 2025-05-17
 
 ### New Features ✨
