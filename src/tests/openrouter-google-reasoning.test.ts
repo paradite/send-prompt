@@ -5,7 +5,7 @@ describe("OpenRouter Provider - Gemini Model", () => {
   // Skip test if OPENROUTER_API_KEY is not set
   const openRouterTestFn = process.env.OPENROUTER_API_KEY ? it : it.skip;
 
-  openRouterTestFn.skip(
+  openRouterTestFn(
     "should make a successful API call to OpenRouter with Gemini model",
     async () => {
       const messages = [
