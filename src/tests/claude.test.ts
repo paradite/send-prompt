@@ -75,7 +75,7 @@ describe("Anthropic Provider", () => {
     "should respect anthropicMaxTokens option",
     async () => {
       const messages = [
-        { role: "user" as const, content: "Write a very long story." },
+        { role: "user" as const, content: "Write a story about a cat." },
       ];
 
       const response = await sendPrompt(
