@@ -797,7 +797,48 @@ export async function sendPrompt(
       break;
     }
 
-    case AI_PROVIDERS.OPENROUTER:
+    case AI_PROVIDERS.OPENROUTER: {
+      if (!isTransformedOpenAI(transformed)) {
+        throw new Error(
+          "Messages were not properly transformed for OpenAI-compatible provider"
+        );
+      }
+      const openai = new OpenAI({
+        apiKey: providerOptions.apiKey,
+        baseURL: AI_PROVIDER_CONFIG[providerOptions.provider].baseURL,
+        dangerouslyAllowBrowser: true,
+        ...(providerOptions.headers
+          ? { defaultHeaders: providerOptions.headers }
+          : {}),
+      });
+      const openaiResponse = await openai.chat.completions.create({
+        model: providerOptions.customModel,
+        messages: transformed.messages,
+        tools: tools?.map((tool: FunctionDefinition) => ({
+          type: tool.type,
+          function: tool.function,
+        })),
+        usage: {
+          include: true,
+        },
+      } as any);
+
+      // TODO: Handle OpenRouter response errors
+      // {
+      //   error: {
+      //     message: 'Provider returned error',
+      //     code: 429,
+      //     metadata: {
+      //       raw: 'google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream; please retry shortly.',
+      //       provider_name: 'Google AI Studio'
+      //     }
+      //   },
+      //   user_id: 'user_xyz'
+      // }
+      response = transformOpenAIResponse(openaiResponse);
+      break;
+    }
+
     case AI_PROVIDERS.DEEPSEEK:
     case AI_PROVIDERS.FIREWORKS: {
       if (!isTransformedOpenAI(transformed)) {
@@ -822,18 +863,6 @@ export async function sendPrompt(
         })),
       });
 
-      // TODO: Handle OpenRouter response errors
-      // {
-      //   error: {
-      //     message: 'Provider returned error',
-      //     code: 429,
-      //     metadata: {
-      //       raw: 'google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream; please retry shortly.',
-      //       provider_name: 'Google AI Studio'
-      //     }
-      //   },
-      //   user_id: 'user_xyz'
-      // }
       response = transformOpenAIResponse(openaiResponse);
       break;
     }
