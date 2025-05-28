@@ -1,14 +1,14 @@
 import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
-const openAIModel = ModelEnum["gpt-4o-mini"];
+const anthropicModel = ModelEnum["claude-3-5-sonnet-20240620"];
 
-describe("OpenAI Streaming", () => {
-  // Skip test if OPENAI_API_KEY is not set
-  const openAITestFn = process.env.OPENAI_API_KEY ? it : it.skip;
+describe("Anthropic Streaming", () => {
+  // Skip test if ANTHROPIC_API_KEY is not set
+  const anthropicTestFn = process.env.ANTHROPIC_API_KEY ? it : it.skip;
 
-  openAITestFn(
-    "should make a successful streaming API call to OpenAI",
+  anthropicTestFn(
+    "should make a successful streaming API call to Anthropic",
     async () => {
       const messages = [
         { role: "user" as const, content: "Count from 1 to 5" },
@@ -27,9 +27,9 @@ describe("OpenAI Streaming", () => {
           },
         },
         {
-          model: openAIModel,
-          provider: AI_PROVIDERS.OPENAI,
-          apiKey: process.env.OPENAI_API_KEY!,
+          model: anthropicModel,
+          provider: AI_PROVIDERS.ANTHROPIC,
+          apiKey: process.env.ANTHROPIC_API_KEY!,
         }
       );
 
@@ -51,10 +51,10 @@ describe("OpenAI Streaming", () => {
       expect(response.durationMs).toBeDefined();
       expect(response.durationMs).toBeGreaterThan(0);
 
-      console.log("OpenAI Streaming Response:", response.message.content);
-      console.log("OpenAI Streaming Usage:", response.usage);
-      console.log("OpenAI Streaming Duration:", response.durationMs, "ms");
-      console.log("OpenAI Streaming Chunks:", streamingChunks.length);
+      console.log("Anthropic Streaming Response:", response.message.content);
+      console.log("Anthropic Streaming Usage:", response.usage);
+      console.log("Anthropic Streaming Duration:", response.durationMs, "ms");
+      console.log("Anthropic Streaming Chunks:", streamingChunks.length);
     },
     30000
   );
@@ -89,9 +89,9 @@ describe("OpenAI Streaming", () => {
             onStreamingContent: () => {},
           },
           {
-            model: openAIModel,
-            provider: AI_PROVIDERS.OPENAI,
-            apiKey: process.env.OPENAI_API_KEY!,
+            model: anthropicModel,
+            provider: AI_PROVIDERS.ANTHROPIC,
+            apiKey: process.env.ANTHROPIC_API_KEY!,
           }
         )
       ).rejects.toThrow("Streaming is not supported when using tool calls");
@@ -107,34 +107,13 @@ describe("OpenAI Streaming", () => {
             stream: true,
           },
           {
-            model: openAIModel,
-            provider: AI_PROVIDERS.OPENAI,
-            apiKey: process.env.OPENAI_API_KEY!,
+            model: anthropicModel,
+            provider: AI_PROVIDERS.ANTHROPIC,
+            apiKey: process.env.ANTHROPIC_API_KEY!,
           }
         )
       ).rejects.toThrow(
         "onStreamingContent callback is required when streaming is enabled"
-      );
-    });
-
-    it("should throw error when streaming with non-supported provider", async () => {
-      const messages = [{ role: "user" as const, content: "Hello" }];
-
-      await expect(
-        sendPrompt(
-          {
-            messages,
-            stream: true,
-            onStreamingContent: () => {},
-          },
-          {
-            model: ModelEnum["gemini-2.5-pro-preview-05-06"],
-            provider: AI_PROVIDERS.GOOGLE,
-            apiKey: "test-key",
-          }
-        )
-      ).rejects.toThrow(
-        "Streaming is only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers"
       );
     });
   });

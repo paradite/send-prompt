@@ -19,6 +19,10 @@ import {
   extractReasoningFromMessage,
 } from "./utils/reasoning";
 import { CompletionUsage } from "openai/resources/completions";
+import {
+  BetaMessageDeltaUsage,
+  BetaUsage,
+} from "@anthropic-ai/sdk/resources/beta/messages/messages";
 
 // Re-export commonly used types from llm-info
 export { ModelEnum, AI_PROVIDERS };
@@ -644,16 +648,17 @@ export async function sendPrompt(
 
   // Validate streaming options
   if (stream) {
-    // Support OpenAI, OpenRouter, DeepSeek, Fireworks, and custom providers for streaming
+    // Support OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers for streaming
     if (
       providerOptions.provider !== AI_PROVIDERS.OPENAI &&
+      providerOptions.provider !== AI_PROVIDERS.ANTHROPIC &&
       providerOptions.provider !== AI_PROVIDERS.OPENROUTER &&
       providerOptions.provider !== AI_PROVIDERS.DEEPSEEK &&
       providerOptions.provider !== AI_PROVIDERS.FIREWORKS &&
       providerOptions.provider !== "custom"
     ) {
       throw new Error(
-        "Streaming is only supported for OpenAI, OpenRouter, DeepSeek, Fireworks, and custom providers"
+        "Streaming is only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers"
       );
     }
 
@@ -815,7 +820,9 @@ export async function sendPrompt(
         maxTokens =
           promptOptions.anthropicMaxTokens || ANTHROPIC_DEFAULT_MAX_TOKENS;
       }
-      const claudeRes = await anthropic.beta.messages.create({
+
+      // Create unified parameters for both streaming and non-streaming
+      const createParams = {
         model: providerOptions.model,
         max_tokens: maxTokens,
         system: systemPrompt,
@@ -827,8 +834,73 @@ export async function sendPrompt(
         })),
         betas,
         ...(temperature !== undefined ? { temperature } : {}),
-      });
-      response = transformAnthropicResponse(claudeRes);
+      };
+
+      if (stream && onStreamingContent) {
+        // Handle streaming
+        const streamResponse = await anthropic.beta.messages.create({
+          ...createParams,
+          stream: true,
+        });
+
+        let fullContent = "";
+        let initialUsage: BetaUsage | undefined = undefined;
+        let finalUsage: BetaMessageDeltaUsage | undefined = undefined;
+
+        for await (const chunk of streamResponse) {
+          if (chunk.type === "message_start" && chunk.message.usage) {
+            // Capture initial usage information from message_start
+            initialUsage = chunk.message.usage;
+          } else if (
+            chunk.type === "content_block_delta" &&
+            chunk.delta.type === "text_delta"
+          ) {
+            const content = chunk.delta.text || "";
+            if (content) {
+              fullContent += content;
+              onStreamingContent(content);
+            }
+          } else if (chunk.type === "message_delta" && chunk.usage) {
+            // Capture final usage information from the message_delta event
+            finalUsage = chunk.usage;
+          }
+        }
+
+        // Create standardized response directly from streaming data
+        const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
+          message: {
+            role: "assistant",
+            content: fullContent,
+          },
+        };
+
+        // Add usage information if available
+        if (initialUsage && finalUsage) {
+          const {
+            input_tokens,
+            cache_creation_input_tokens,
+            cache_read_input_tokens,
+          } = initialUsage;
+          const { output_tokens } = finalUsage;
+          standardizedResponse.usage = {
+            promptTokens: input_tokens || 0,
+            completionTokens: output_tokens || 0,
+            totalTokens:
+              (input_tokens || 0) +
+              (cache_creation_input_tokens || 0) +
+              (cache_read_input_tokens || 0) +
+              (output_tokens || 0),
+            // Anthropic doesn't return thoughts tokens
+            thoughtsTokens: 0,
+          };
+        }
+
+        response = standardizedResponse;
+      } else {
+        // Handle non-streaming
+        const claudeRes = await anthropic.beta.messages.create(createParams);
+        response = transformAnthropicResponse(claudeRes);
+      }
       break;
     }
 

@@ -386,7 +386,7 @@ if (response.reasoning) {
 
 ### Streaming
 
-You can stream responses from supported providers to get real-time content as it's generated. Streaming is currently supported for OpenAI, OpenRouter, DeepSeek, and Fireworks providers and cannot be used with function calling.
+You can stream responses from supported providers to get real-time content as it's generated. Streaming is currently supported for OpenAI, Anthropic, OpenRouter, DeepSeek, and Fireworks providers and cannot be used with function calling.
 
 ```typescript
 const response = await sendPrompt(
@@ -415,7 +415,7 @@ if (response.usage) {
 
 **Streaming Limitations:**
 
-- Only supported for OpenAI, OpenRouter, DeepSeek, and Fireworks providers
+- Only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, and Fireworks providers
 - Cannot be used with function calling (`tools` parameter)
 - Requires `onStreamingContent` callback to handle streaming chunks
 
