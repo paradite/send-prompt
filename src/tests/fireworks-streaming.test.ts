@@ -1,22 +1,22 @@
 import { sendPrompt } from "../index";
 import { AI_PROVIDERS } from "llm-info";
 
-describe("OpenRouter Streaming", () => {
-  // Skip test if OPENROUTER_API_KEY is not set
-  const openRouterTestFn = process.env.OPENROUTER_API_KEY ? it : it.skip;
+describe("Fireworks Streaming", () => {
+  // Skip test if FIREWORKS_API_KEY is not set
+  const fireworksTestFn = process.env.FIREWORKS_API_KEY ? it : it.skip;
 
   const testMessages = [
     { role: "user" as const, content: "Count from 1 to 5" },
   ];
 
-  const openRouterOptions = {
-    provider: AI_PROVIDERS.OPENROUTER,
-    customModel: "openai/gpt-4.1-mini",
-    apiKey: process.env.OPENROUTER_API_KEY!,
+  const fireworksOptions = {
+    provider: AI_PROVIDERS.FIREWORKS,
+    customModel: "accounts/fireworks/models/deepseek-v3-0324",
+    apiKey: process.env.FIREWORKS_API_KEY!,
   };
 
-  openRouterTestFn(
-    "should support streaming for OpenRouter",
+  fireworksTestFn(
+    "should support streaming for Fireworks",
     async () => {
       let streamedContent = "";
       const streamingChunks: string[] = [];
@@ -30,7 +30,7 @@ describe("OpenRouter Streaming", () => {
             streamingChunks.push(content);
           },
         },
-        openRouterOptions
+        fireworksOptions
       );
 
       // Test streaming functionality
@@ -51,10 +51,10 @@ describe("OpenRouter Streaming", () => {
       expect(response.durationMs).toBeDefined();
       expect(response.durationMs).toBeGreaterThan(0);
 
-      console.log("OpenRouter Streaming Response:", response.message.content);
-      console.log("OpenRouter Streaming Usage:", response.usage);
-      console.log("OpenRouter Streaming Duration:", response.durationMs, "ms");
-      console.log("OpenRouter Streaming Chunks:", streamingChunks.length);
+      console.log("Fireworks Streaming Response:", response.message.content);
+      console.log("Fireworks Streaming Usage:", response.usage);
+      console.log("Fireworks Streaming Duration:", response.durationMs, "ms");
+      console.log("Fireworks Streaming Chunks:", streamingChunks.length);
     },
     30000
   );
@@ -67,7 +67,7 @@ describe("OpenRouter Streaming", () => {
             messages: testMessages,
             stream: true,
           },
-          openRouterOptions
+          fireworksOptions
         )
       ).rejects.toThrow(
         "onStreamingContent callback is required when streaming is enabled"
@@ -96,7 +96,7 @@ describe("OpenRouter Streaming", () => {
             ],
             onStreamingContent: () => {},
           },
-          openRouterOptions
+          fireworksOptions
         )
       ).rejects.toThrow("Streaming is not supported when using tool calls");
     });

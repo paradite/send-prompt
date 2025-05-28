@@ -18,6 +18,7 @@
     }
   },
   "scripts": {
+    "build": "tsup src/index.ts --dts --format esm,cjs",
     "compile": "tsup src/index.ts --dts --format esm,cjs",
     "prepublishOnly": "rm -rf ./dist && npm run compile",
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
