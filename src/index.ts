@@ -824,11 +824,12 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        // @ts-expect-error
         usage: {
           include: true,
         },
         ...(temperature !== undefined ? { temperature } : {}),
-      } as any);
+      });
 
       // TODO: Handle OpenRouter response errors
       // {
