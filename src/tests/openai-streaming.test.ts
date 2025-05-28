@@ -128,13 +128,16 @@ describe("OpenAI Streaming", () => {
             onStreamingContent: () => {},
           },
           {
-            model: ModelEnum["gemini-2.5-pro-preview-05-06"],
-            provider: AI_PROVIDERS.GOOGLE,
+            model: "gpt-4o-mini",
+            provider: AI_PROVIDERS.AZURE_OPENAI,
             apiKey: "test-key",
+            endpoint: "https://test.openai.azure.com/",
+            deployment: "test-deployment",
+            apiVersion: "2024-02-01",
           }
         )
       ).rejects.toThrow(
-        "Streaming is only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers"
+        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers"
       );
     });
   });

@@ -12,6 +12,7 @@ import {
   GenerateContentResponse,
   FunctionCall as GoogleFunctionCall,
   FunctionResponse as GoogleFunctionResponse,
+  GenerateContentResponseUsageMetadata,
 } from "@google/genai";
 import { processBase64Image } from "./utils/image";
 import {
@@ -648,17 +649,19 @@ export async function sendPrompt(
 
   // Validate streaming options
   if (stream) {
-    // Support OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers for streaming
+    // Support OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers for streaming
     if (
       providerOptions.provider !== AI_PROVIDERS.OPENAI &&
       providerOptions.provider !== AI_PROVIDERS.ANTHROPIC &&
+      providerOptions.provider !== AI_PROVIDERS.GOOGLE &&
+      providerOptions.provider !== AI_PROVIDERS.GOOGLE_VERTEX_AI &&
       providerOptions.provider !== AI_PROVIDERS.OPENROUTER &&
       providerOptions.provider !== AI_PROVIDERS.DEEPSEEK &&
       providerOptions.provider !== AI_PROVIDERS.FIREWORKS &&
       providerOptions.provider !== "custom"
     ) {
       throw new Error(
-        "Streaming is only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, Fireworks, and custom providers"
+        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers"
       );
     }
 
@@ -910,8 +913,6 @@ export async function sendPrompt(
         throw new Error("Messages were not properly transformed for Google");
       }
       let ai: GoogleGenAI;
-      console.log("options", providerOptions);
-      console.log("vertexai" in providerOptions);
       if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
         // Google Vertex AI
         ai = new GoogleGenAI({
@@ -926,9 +927,6 @@ export async function sendPrompt(
           apiKey: providerOptions.apiKey,
         });
       }
-
-      console.log("model", providerOptions.model);
-      console.log("ai.vertexai", ai.vertexai);
 
       // Prepare config for function calling if tools are provided
       let config: any = {
@@ -965,13 +963,70 @@ export async function sendPrompt(
         };
       }
 
-      const googleResponse = await ai.models.generateContent({
-        model: providerOptions.model,
-        contents: transformed.messages,
-        config,
-      });
+      if (stream && onStreamingContent) {
+        // Handle streaming
+        const streamResponse = await ai.models.generateContentStream({
+          model: providerOptions.model,
+          contents: transformed.messages,
+          config,
+        });
 
-      response = transformGoogleResponse(googleResponse);
+        let fullContent = "";
+        let finalUsageMetadata:
+          | GenerateContentResponseUsageMetadata
+          | undefined = undefined;
+
+        for await (const chunk of streamResponse) {
+          const content = chunk.text || "";
+          if (content) {
+            fullContent += content;
+            onStreamingContent(content);
+          }
+
+          // Capture usage information from the chunk
+          if (chunk.usageMetadata) {
+            finalUsageMetadata = chunk.usageMetadata;
+          }
+        }
+
+        console.log("finalUsageMetadata", finalUsageMetadata);
+
+        // Create standardized response directly from streaming data
+        const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
+          message: {
+            role: "assistant",
+            content: fullContent,
+          },
+        };
+
+        // Add usage information if available
+        if (finalUsageMetadata) {
+          const {
+            promptTokenCount,
+            candidatesTokenCount,
+            totalTokenCount,
+            thoughtsTokenCount,
+          } = finalUsageMetadata;
+          standardizedResponse.usage = {
+            promptTokens: promptTokenCount || 0,
+            completionTokens:
+              (candidatesTokenCount || 0) + (thoughtsTokenCount || 0),
+            totalTokens: totalTokenCount || 0,
+            thoughtsTokens: thoughtsTokenCount || 0,
+          };
+        }
+
+        response = standardizedResponse;
+      } else {
+        // Handle non-streaming
+        const googleResponse = await ai.models.generateContent({
+          model: providerOptions.model,
+          contents: transformed.messages,
+          config,
+        });
+
+        response = transformGoogleResponse(googleResponse);
+      }
       break;
     }
 
