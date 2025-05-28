@@ -24,6 +24,7 @@ Related projects:
 - 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
 - 🎨 Provider specific options (headers, reasoning extraction)
 - 🖼️ Support for image input in messages (base64 and URL formats)
+- ⚡ Streaming support for real-time responses (OpenAI only)
 
 ## Quick Demo
 
@@ -383,6 +384,41 @@ if (response.reasoning) {
 }
 ```
 
+### Streaming
+
+You can stream responses from OpenAI models to get real-time content as it's generated. Streaming is currently only supported for OpenAI provider and cannot be used with function calling.
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Write a short story about a robot" }],
+    stream: true,
+    onStreamingContent: (content: string) => {
+      // This callback is called for each chunk of content
+      process.stdout.write(content);
+    },
+  },
+  {
+    model: ModelEnum["gpt-4o-mini"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+  }
+);
+
+// The function still returns the complete response at the end
+console.log("\n\nComplete response:", response.message.content);
+console.log("Duration:", response.durationMs, "ms");
+if (response.usage) {
+  console.log("Token usage:", response.usage);
+}
+```
+
+**Streaming Limitations:**
+
+- Only supported for OpenAI provider
+- Cannot be used with function calling (`tools` parameter)
+- Requires `onStreamingContent` callback to handle streaming chunks
+
 ### Response Format
 
 The response from `sendPrompt` follows a standardized format across all providers:
@@ -484,5 +520,5 @@ The multi-round tool calling process involves:
 
 - [x] Support for DeepSeek
 - [x] Support for image input
-- [ ] Support for streaming
+- [x] Support for streaming
 - [ ] Better error handling
