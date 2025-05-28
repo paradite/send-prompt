@@ -116,29 +116,5 @@ describe("OpenAI Streaming", () => {
         "onStreamingContent callback is required when streaming is enabled"
       );
     });
-
-    it("should throw error when streaming with non-supported provider", async () => {
-      const messages = [{ role: "user" as const, content: "Hello" }];
-
-      await expect(
-        sendPrompt(
-          {
-            messages,
-            stream: true,
-            onStreamingContent: () => {},
-          },
-          {
-            model: "gpt-4o-mini",
-            provider: AI_PROVIDERS.AZURE_OPENAI,
-            apiKey: "test-key",
-            endpoint: "https://test.openai.azure.com/",
-            deployment: "test-deployment",
-            apiVersion: "2024-02-01",
-          }
-        )
-      ).rejects.toThrow(
-        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers"
-      );
-    });
   });
 });

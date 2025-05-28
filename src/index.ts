@@ -649,7 +649,7 @@ export async function sendPrompt(
 
   // Validate streaming options
   if (stream) {
-    // Support OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers for streaming
+    // Support OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, Azure OpenAI, and custom providers for streaming
     if (
       providerOptions.provider !== AI_PROVIDERS.OPENAI &&
       providerOptions.provider !== AI_PROVIDERS.ANTHROPIC &&
@@ -658,10 +658,11 @@ export async function sendPrompt(
       providerOptions.provider !== AI_PROVIDERS.OPENROUTER &&
       providerOptions.provider !== AI_PROVIDERS.DEEPSEEK &&
       providerOptions.provider !== AI_PROVIDERS.FIREWORKS &&
+      providerOptions.provider !== AI_PROVIDERS.AZURE_OPENAI &&
       providerOptions.provider !== "custom"
     ) {
       throw new Error(
-        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, and custom providers"
+        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, Azure OpenAI, and custom providers"
       );
     }
 
@@ -1311,7 +1312,9 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
-      const azureOpenAIResponse = await azureOpenAI.chat.completions.create({
+
+      // Create unified parameters for both streaming and non-streaming
+      const createParams = {
         model: providerOptions.deployment,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
@@ -1319,9 +1322,61 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
-      });
+      };
 
-      response = transformOpenAIResponse(azureOpenAIResponse);
+      if (stream && onStreamingContent) {
+        // Handle streaming
+        const streamResponse = await azureOpenAI.chat.completions.create({
+          ...createParams,
+          stream: true,
+          stream_options: {
+            include_usage: true,
+          },
+        });
+
+        let fullContent = "";
+        let finalUsage: CompletionUsage | undefined = undefined;
+
+        for await (const chunk of streamResponse) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          if (content) {
+            fullContent += content;
+            onStreamingContent(content);
+          }
+
+          // Capture usage information from the final chunk
+          if (chunk.usage) {
+            finalUsage = chunk.usage;
+          }
+        }
+
+        // Create standardized response directly from streaming data
+        const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
+          message: {
+            role: "assistant",
+            content: fullContent,
+          },
+        };
+
+        // Add usage information if available
+        if (finalUsage) {
+          standardizedResponse.usage = {
+            promptTokens: finalUsage.prompt_tokens,
+            completionTokens: finalUsage.completion_tokens,
+            totalTokens: finalUsage.total_tokens,
+            thoughtsTokens:
+              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+          };
+        }
+
+        response = standardizedResponse;
+      } else {
+        // Handle non-streaming
+        const azureOpenAIResponse = await azureOpenAI.chat.completions.create(
+          createParams
+        );
+        response = transformOpenAIResponse(azureOpenAIResponse);
+      }
       break;
     }
     default: {

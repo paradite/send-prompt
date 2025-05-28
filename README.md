@@ -24,7 +24,7 @@ Related projects:
 - 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
 - 🎨 Provider specific options (headers, reasoning extraction)
 - 🖼️ Support for image input in messages (base64 and URL formats)
-- ⚡ Streaming support for real-time responses (OpenAI only)
+- ⚡ Streaming support for real-time responses
 
 ## Quick Demo
 
@@ -386,7 +386,7 @@ if (response.reasoning) {
 
 ### Streaming
 
-You can stream responses from supported providers to get real-time content as it's generated. Streaming is currently supported for OpenAI, Anthropic, OpenRouter, DeepSeek, and Fireworks providers and cannot be used with function calling.
+You can stream responses from supported providers to get real-time content as it's generated. Streaming is supported for all providers.
 
 ```typescript
 const response = await sendPrompt(
@@ -415,9 +415,7 @@ if (response.usage) {
 
 **Streaming Limitations:**
 
-- Only supported for OpenAI, Anthropic, OpenRouter, DeepSeek, and Fireworks providers
 - Cannot be used with function calling (`tools` parameter)
-- Requires `onStreamingContent` callback to handle streaming chunks
 
 ### Response Format
 

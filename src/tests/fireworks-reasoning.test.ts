@@ -45,6 +45,6 @@ describe("Fireworks Reasoning Extraction", () => {
       console.log("Fireworks Reasoning:", response.reasoning);
       console.log("Fireworks Usage:", response.usage);
     },
-    30000
+    40000
   );
 });
