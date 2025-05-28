@@ -31,6 +31,12 @@ describe("OpenRouter Provider - Gemini Model", () => {
         }
       );
 
+      console.log(
+        "OpenRouter Gemini Response:",
+        JSON.stringify(response, null, 2)
+      );
+      console.log("OpenRouter Gemini Usage:", response.usage);
+
       expect(response.message.content).toBeTruthy();
       expect(response.usage).toBeDefined();
       expect(response.usage?.promptTokens).toBeGreaterThan(0);
@@ -42,11 +48,6 @@ describe("OpenRouter Provider - Gemini Model", () => {
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
       );
-      console.log(
-        "OpenRouter Gemini Response:",
-        JSON.stringify(response, null, 2)
-      );
-      console.log("OpenRouter Gemini Usage:", response.usage);
     },
     30000
   );
