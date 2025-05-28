@@ -2,6 +2,19 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.3.0] - 2025-05-28
+
+### New Features ✨
+
+- Support for streaming responses across all providers
+- Added `stream` parameter in prompt options to enable real-time content streaming
+- Added `onStreamingContent` callback function to handle streaming content chunks
+- Complete response is still returned at the end with usage statistics and duration
+
+### Limitations ⚠️
+
+- Streaming cannot be used with function calling (`tools` parameter)
+
 ## [2.2.1] - 2025-05-28
 
 ### New Features ✨

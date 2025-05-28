@@ -24,7 +24,7 @@ Related projects:
 - 🛡️ Handles all edge cases (message format, function calling, multi-round conversations)
 - 🎨 Provider specific options (headers, reasoning extraction)
 - 🖼️ Support for image input in messages (base64 and URL formats)
-- ⚡ Streaming support for real-time responses
+- ⚡ Streaming support for real-time responses across all providers
 
 ## Quick Demo
 
