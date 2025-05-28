@@ -644,9 +644,14 @@ export async function sendPrompt(
 
   // Validate streaming options
   if (stream) {
-    // Only support OpenAI for streaming
-    if (providerOptions.provider !== AI_PROVIDERS.OPENAI) {
-      throw new Error("Streaming is only supported for OpenAI provider");
+    // Support OpenAI and OpenRouter for streaming
+    if (
+      providerOptions.provider !== AI_PROVIDERS.OPENAI &&
+      providerOptions.provider !== AI_PROVIDERS.OPENROUTER
+    ) {
+      throw new Error(
+        "Streaming is only supported for OpenAI and OpenRouter providers"
+      );
     }
 
     // Don't support streaming with tool calls
@@ -909,33 +914,88 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
-      const openaiResponse = await openai.chat.completions.create({
+
+      // Create unified parameters for both streaming and non-streaming
+      const createParams = {
         model: providerOptions.customModel,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
           function: tool.function,
         })),
-        // @ts-expect-error
-        usage: {
-          include: true,
-        },
         ...(temperature !== undefined ? { temperature } : {}),
-      });
+      };
 
-      // TODO: Handle OpenRouter response errors
-      // {
-      //   error: {
-      //     message: 'Provider returned error',
-      //     code: 429,
-      //     metadata: {
-      //       raw: 'google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream; please retry shortly.',
-      //       provider_name: 'Google AI Studio'
-      //     }
-      //   },
-      //   user_id: 'user_xyz'
-      // }
-      response = transformOpenAIResponse(openaiResponse);
+      if (stream && onStreamingContent) {
+        // Handle streaming
+        const streamResponse = await openai.chat.completions.create({
+          ...createParams,
+          stream: true,
+          stream_options: {
+            include_usage: true,
+          },
+        });
+
+        let fullContent = "";
+        let finalUsage: CompletionUsage | undefined = undefined;
+
+        for await (const chunk of streamResponse) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          if (content) {
+            fullContent += content;
+            onStreamingContent(content);
+          }
+
+          // Capture usage information from the final chunk
+          if (chunk.usage) {
+            finalUsage = chunk.usage;
+          }
+        }
+
+        // Create standardized response directly from streaming data
+        const standardizedResponse: Omit<StandardizedResponse, "durationMs"> = {
+          message: {
+            role: "assistant",
+            content: fullContent,
+          },
+        };
+
+        // Add usage information if available
+        if (finalUsage) {
+          standardizedResponse.usage = {
+            promptTokens: finalUsage.prompt_tokens,
+            completionTokens: finalUsage.completion_tokens,
+            totalTokens: finalUsage.total_tokens,
+            thoughtsTokens:
+              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+          };
+        }
+
+        response = standardizedResponse;
+      } else {
+        // Handle non-streaming
+        const openaiResponse = await openai.chat.completions.create({
+          ...createParams,
+          // @ts-expect-error
+          usage: {
+            include: true,
+          },
+        });
+
+        // TODO: Handle OpenRouter response errors
+        // {
+        //   error: {
+        //     message: 'Provider returned error',
+        //     code: 429,
+        //     metadata: {
+        //       raw: 'google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream; please retry shortly.',
+        //       provider_name: 'Google AI Studio'
+        //     }
+        //   },
+        //   user_id: 'user_xyz'
+        // }
+        response = transformOpenAIResponse(openaiResponse);
+      }
       break;
     }
 

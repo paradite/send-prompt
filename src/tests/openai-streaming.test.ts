@@ -241,7 +241,9 @@ describe("OpenAI Streaming", () => {
             apiKey: "test-key",
           }
         )
-      ).rejects.toThrow("Streaming is only supported for OpenAI provider");
+      ).rejects.toThrow(
+        "Streaming is only supported for OpenAI and OpenRouter providers"
+      );
     },
     30000
   );
