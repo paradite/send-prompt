@@ -307,6 +307,39 @@ const response = await sendPrompt(
 );
 ```
 
+#### Temperature
+
+You can control the randomness of the model's responses using the `temperature` parameter. Temperature ranges from 0 to 2, where lower values make the output more focused and deterministic, while higher values make it more random and creative:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Write a creative story" }],
+    temperature: 0.8, // More creative and random
+  },
+  {
+    model: ModelEnum["gpt-4.1"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-api-key",
+  }
+);
+
+// For more deterministic responses
+const deterministicResponse = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "What is 2 + 2?" }],
+    temperature: 0.1, // More focused and deterministic
+  },
+  {
+    model: ModelEnum["claude-3-7-sonnet-20250219"],
+    provider: AI_PROVIDERS.ANTHROPIC,
+    apiKey: "your-api-key",
+  }
+);
+```
+
+The temperature parameter is supported across all providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek, Azure OpenAI, and custom providers). If not specified, each provider will use its default temperature value.
+
 #### Anthropic Max Tokens
 
 For Anthropic models, you can control the maximum number of tokens in the response using the `anthropicMaxTokens` option:

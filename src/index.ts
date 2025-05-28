@@ -235,6 +235,7 @@ export type PromptOptions = {
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
   anthropicMaxTokens?: number;
+  temperature?: number;
 };
 
 export type HeadersOptions = {
@@ -622,7 +623,7 @@ export async function sendPrompt(
   providerOptions: ProviderOptions
 ): Promise<StandardizedResponse> {
   const startTime = Date.now();
-  const { messages, systemPrompt, tools } = promptOptions;
+  const { messages, systemPrompt, tools, temperature } = promptOptions;
   let providerToTransform: TransformSupportedProvider;
   let systemRole: "system" | "developer" = "developer";
   if (providerOptions.provider === AI_PROVIDERS.OPENAI) {
@@ -677,6 +678,7 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        ...(temperature !== undefined ? { temperature } : {}),
       });
 
       response = transformOpenAIResponse(openaiResponse);
@@ -724,6 +726,7 @@ export async function sendPrompt(
           input_schema: tool.function.parameters,
         })),
         betas,
+        ...(temperature !== undefined ? { temperature } : {}),
       });
       response = transformAnthropicResponse(claudeRes);
       break;
@@ -756,7 +759,10 @@ export async function sendPrompt(
       console.log("ai.vertexai", ai.vertexai);
 
       // Prepare config for function calling if tools are provided
-      let config: any = { systemInstruction: systemPrompt };
+      let config: any = {
+        systemInstruction: systemPrompt,
+        ...(temperature !== undefined ? { temperature } : {}),
+      };
       if (tools && tools.length > 0) {
         config = {
           ...config,
@@ -818,9 +824,7 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
-        usage: {
-          include: true,
-        },
+        ...(temperature !== undefined ? { temperature } : {}),
       } as any);
 
       // TODO: Handle OpenRouter response errors
@@ -861,6 +865,7 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        ...(temperature !== undefined ? { temperature } : {}),
       });
 
       response = transformOpenAIResponse(openaiResponse);
@@ -889,6 +894,7 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        ...(temperature !== undefined ? { temperature } : {}),
       });
 
       response = transformOpenAIResponse(openaiResponse);
@@ -918,6 +924,7 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        ...(temperature !== undefined ? { temperature } : {}),
       });
 
       response = transformOpenAIResponse(azureOpenAIResponse);

@@ -2,6 +2,15 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.2.0] - 2025-05-28
+
+### New Features ✨
+
+- Support for optional `temperature` parameter in prompt options
+- Temperature parameter is supported across all providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek, Azure OpenAI, and custom providers)
+- Temperature ranges from 0 to 2, where lower values make output more focused and deterministic, while higher values make it more random and creative
+- Added comprehensive tests for temperature parameter with major providers
+
 ## [2.1.3] - 2025-05-20
 
 ### New Features ✨
