@@ -61,4 +61,54 @@ describe("Fireworks Custom Provider", () => {
     },
     30000
   );
+
+  fireworksTestFn(
+    "should support streaming with Fireworks as a custom provider",
+    async () => {
+      const messages = [
+        {
+          role: "user" as const,
+          content: "Tell me a short story about a robot.",
+        },
+      ];
+
+      const baseURL = AI_PROVIDER_CONFIG[AI_PROVIDERS.FIREWORKS].baseURL;
+      if (!baseURL) {
+        throw new Error("Fireworks base URL is not defined");
+      }
+
+      let streamedContent = "";
+      const streamingChunks: string[] = [];
+
+      const response = await sendPrompt(
+        {
+          messages,
+          stream: true,
+          onStreamingContent: (content: string) => {
+            streamedContent += content;
+            streamingChunks.push(content);
+          },
+        },
+        {
+          provider: "custom",
+          customModel: "accounts/fireworks/models/deepseek-v3-0324",
+          baseURL,
+          apiKey: process.env.FIREWORKS_API_KEY!,
+        }
+      );
+
+      // Verify streaming worked
+      expect(streamingChunks.length).toBeGreaterThan(0);
+      expect(streamedContent).toBeTruthy();
+      expect(response.message.content).toBe(streamedContent);
+      expect(response.message.content).toContain("robot");
+
+      console.log(
+        "Fireworks Custom Provider Streaming Response:",
+        response.message.content
+      );
+      console.log("Number of streaming chunks:", streamingChunks.length);
+    },
+    30000
+  );
 });
