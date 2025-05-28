@@ -2,7 +2,7 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
-## [2.2.0] - 2025-05-28
+## [2.2.1] - 2025-05-28
 
 ### New Features ✨
 

@@ -33,8 +33,13 @@ describe("OpenRouter Reasoning Extraction", () => {
         }
       );
 
+      console.log("OpenRouter Response:", response.message.content);
+      console.log("OpenRouter Reasoning:", response.reasoning);
+      console.log("OpenRouter Usage:", response.usage);
+
       expect(response.message.content).toBeTruthy();
       expect(response.reasoning).toBeTruthy();
+      expect(response.usage?.thoughtsTokens).toBeGreaterThan(0);
       expect(response.message.content).not.toContain("<think>");
       expect(response.message.content).not.toContain("</think>");
       expect(response.usage).toBeDefined();
@@ -45,9 +50,6 @@ describe("OpenRouter Reasoning Extraction", () => {
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
       );
-      console.log("OpenRouter Response:", response.message.content);
-      console.log("OpenRouter Reasoning:", response.reasoning);
-      console.log("OpenRouter Usage:", response.usage);
     },
     30000
   );

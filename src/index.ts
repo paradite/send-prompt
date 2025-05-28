@@ -824,6 +824,9 @@ export async function sendPrompt(
           type: tool.type,
           function: tool.function,
         })),
+        usage: {
+          include: true,
+        },
         ...(temperature !== undefined ? { temperature } : {}),
       } as any);
 
