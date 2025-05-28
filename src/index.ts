@@ -931,7 +931,7 @@ export async function sendPrompt(
 
       // Prepare config for function calling if tools are provided
       let config: any = {
-        systemInstruction: systemPrompt,
+        ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
         ...(temperature !== undefined ? { temperature } : {}),
       };
       if (tools && tools.length > 0) {

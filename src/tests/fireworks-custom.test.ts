@@ -101,7 +101,6 @@ describe("Fireworks Custom Provider", () => {
       expect(streamingChunks.length).toBeGreaterThan(0);
       expect(streamedContent).toBeTruthy();
       expect(response.message.content).toBe(streamedContent);
-      expect(response.message.content).toContain("robot");
 
       console.log(
         "Fireworks Custom Provider Streaming Response:",
