@@ -72,14 +72,14 @@ export type SystemMessage = BaseTextMessage & {
 export type GoogleFunctionCallMessage = {
   role: "google_function_call";
   args: Record<string, unknown>;
-  id: string;
+  id: string | undefined;
   name: string;
 };
 
 // https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
 export type GoogleFunctionResponseMessage = {
   role: "google_function_response";
-  id: string;
+  id: string | undefined;
   name: string;
   response: Record<string, unknown>;
 };
@@ -174,7 +174,7 @@ function isUserImageMessage(
 }
 
 export type FunctionCall = {
-  id: string;
+  id: string | undefined;
   type: "function";
   function: {
     name: string;
@@ -396,7 +396,7 @@ export function transformMessagesForProvider({
           if (msg.role === "google_function_call") {
             // https://googleapis.github.io/js-genai/release_docs/interfaces/types.FunctionCall.html
             const functionCall: GoogleFunctionCall = {
-              id: msg.id,
+              ...(msg.id ? { id: msg.id } : {}),
               args: msg.args,
               name: msg.name,
             };
@@ -408,7 +408,7 @@ export function transformMessagesForProvider({
           } else if (msg.role === "google_function_response") {
             // https://googleapis.github.io/js-genai/release_docs/classes/types.FunctionResponse.html
             const functionResponse: GoogleFunctionResponse = {
-              id: msg.id,
+              ...(msg.id ? { id: msg.id } : {}),
               name: msg.name,
               response: msg.response,
             };
@@ -598,7 +598,7 @@ function transformGoogleResponse(
   let tool_calls: FunctionCall[] | undefined = undefined;
   if (response.functionCalls && Array.isArray(response.functionCalls)) {
     tool_calls = response.functionCalls.map((call: GoogleFunctionCall) => ({
-      id: call.id || "function_call",
+      id: call.id,
       type: "function",
       function: {
         name: call.name || "function_call",

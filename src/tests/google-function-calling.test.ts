@@ -131,33 +131,63 @@ describe("Google Function Calling", () => {
   );
 
   googleTestFn(
-    "should handle multi-round function calling with simulated responses",
+    "should handle multi-round function calling with correct tool call and response IDs",
     async () => {
-      const messages = [
+      // First call: Get the initial function call from the model
+      const initialMessages = [
         { role: "user" as const, content: "What is 15 plus 32?" },
+      ];
+
+      const firstResponse = await sendPrompt(
+        {
+          messages: initialMessages,
+          tools: [calculatorTool],
+          toolCallMode: "AUTO",
+        },
+        {
+          model: googleModel,
+          provider: AI_PROVIDERS.GOOGLE,
+          apiKey: process.env.GEMINI_API_KEY!,
+        }
+      );
+
+      // Verify we got a function call
+      expect(firstResponse.tool_calls).toBeDefined();
+      expect(firstResponse.tool_calls?.length).toBeGreaterThan(0);
+
+      const toolCall = firstResponse.tool_calls![0];
+      expect(toolCall.function.name).toBe("calculator");
+
+      // Parse the arguments to verify the call is correct
+      const args = JSON.parse(toolCall.function.arguments);
+      expect(args.operation).toBe("add");
+      expect(args.a).toBe(15);
+      expect(args.b).toBe(32);
+
+      console.log("Initial function call:", toolCall);
+
+      // Second call: Provide the function response and get final answer
+      const messagesWithResponse = [
+        ...initialMessages,
         {
           role: "google_function_call" as const,
-          id: "calc_1",
-          name: "calculator",
-          args: {
-            operation: "add",
-            a: 15,
-            b: 32,
-          },
+          id: toolCall.id, // Use the actual ID from the first response
+          name: toolCall.function.name,
+          args: args,
         },
         {
           role: "google_function_response" as const,
-          id: "calc_1",
-          name: "calculator",
+          id: toolCall.id, // Use the same actual ID
+          name: toolCall.function.name,
           response: {
-            result: 47,
+            result: 47, // Provide the correct answer
           },
         },
       ];
 
-      const response = await sendPrompt(
+      const finalResponse = await sendPrompt(
         {
-          messages,
+          messages: messagesWithResponse,
           tools: [calculatorTool],
           toolCallMode: "AUTO",
         },
@@ -169,14 +199,14 @@ describe("Google Function Calling", () => {
       );
 
       // Should not have any tool calls since we already provided the result
-      expect(response.tool_calls).toBeUndefined();
+      expect(finalResponse.tool_calls).toBeUndefined();
 
       // Should have a response that acknowledges the calculation result
-      expect(response.message.content).toBeDefined();
-      expect(response.message.content.length).toBeGreaterThan(0);
-      expect(response.message.content.toLowerCase()).toContain("47");
+      expect(finalResponse.message.content).toBeDefined();
+      expect(finalResponse.message.content.length).toBeGreaterThan(0);
+      expect(finalResponse.message.content.toLowerCase()).toContain("47");
 
-      console.log("Multi-round response:", response.message.content);
+      console.log("Multi-round response:", finalResponse.message.content);
     },
     30000
   );
