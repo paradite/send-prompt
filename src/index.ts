@@ -262,9 +262,12 @@ export type FirstPartyProviderOptions = {
     | typeof AI_PROVIDERS.OPENAI
     | typeof AI_PROVIDERS.ANTHROPIC
     | typeof AI_PROVIDERS.GOOGLE;
-  model: ModelEnum;
   apiKey: string;
-} & HeadersOptions;
+} & HeadersOptions &
+  (
+    | { model: ModelEnum; customModel?: never }
+    | { model?: never; customModel: string }
+  );
 
 export type BaseURLProviderOptions = {
   provider:
@@ -727,9 +730,12 @@ export async function sendPrompt(
           : {}),
       });
 
+      // Get the model name from either model or customModel field
+      const modelName = providerOptions.model || providerOptions.customModel;
+
       // Create unified parameters for both streaming and non-streaming
       const createParams = {
-        model: providerOptions.model,
+        model: modelName,
         messages: transformed.messages,
         tools: tools?.map((tool: FunctionDefinition) => ({
           type: tool.type,
@@ -805,6 +811,10 @@ export async function sendPrompt(
           ? { defaultHeaders: providerOptions.headers }
           : {}),
       });
+
+      // Get the model name from either model or customModel field
+      const modelName = providerOptions.model || providerOptions.customModel;
+
       let betas: Anthropic.Beta.AnthropicBeta[] | undefined = undefined;
       if (providerOptions.model === ModelEnum["claude-3-7-sonnet-20250219"]) {
         // use token-efficient-tools-2025-02-19 beta for claude-3-7-sonnet-20250219
@@ -816,9 +826,16 @@ export async function sendPrompt(
       const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;
 
       let maxTokens =
-        promptOptions.anthropicMaxTokens ||
-        ModelInfoMap[providerOptions.model].outputTokenLimit ||
-        ANTHROPIC_DEFAULT_MAX_TOKENS;
+        promptOptions.anthropicMaxTokens || ANTHROPIC_DEFAULT_MAX_TOKENS;
+
+      // Only use ModelInfoMap if we have a model enum, not a custom model string
+      if (providerOptions.model && ModelInfoMap[providerOptions.model]) {
+        maxTokens =
+          promptOptions.anthropicMaxTokens ||
+          ModelInfoMap[providerOptions.model].outputTokenLimit ||
+          ANTHROPIC_DEFAULT_MAX_TOKENS;
+      }
+
       if (tools && tools.length > 0) {
         // limit max tokens to default max tokens for function calling
         maxTokens =
@@ -827,7 +844,7 @@ export async function sendPrompt(
 
       // Create unified parameters for both streaming and non-streaming
       const createParams = {
-        model: providerOptions.model,
+        model: modelName,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: transformed.messages,
@@ -929,6 +946,14 @@ export async function sendPrompt(
         });
       }
 
+      // Get the model name from either model or customModel field
+      let modelName: string;
+      if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
+        modelName = providerOptions.model;
+      } else {
+        modelName = providerOptions.model || providerOptions.customModel;
+      }
+
       // Prepare config for function calling if tools are provided
       let config: any = {
         ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
@@ -967,7 +992,7 @@ export async function sendPrompt(
       if (stream && onStreamingContent) {
         // Handle streaming
         const streamResponse = await ai.models.generateContentStream({
-          model: providerOptions.model,
+          model: modelName,
           contents: transformed.messages,
           config,
         });
@@ -1021,7 +1046,7 @@ export async function sendPrompt(
       } else {
         // Handle non-streaming
         const googleResponse = await ai.models.generateContent({
-          model: providerOptions.model,
+          model: modelName,
           contents: transformed.messages,
           config,
         });
