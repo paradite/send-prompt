@@ -2,6 +2,15 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.4.0] - 2025-06-03
+
+### New Features ✨
+
+- Support for custom models in first party providers (OpenAI, Anthropic, Google)
+  - Use `customModel` field as an alternative to `model` enum for specifying models not yet available in the library's model enum
+  - `model` and `customModel` fields are mutually exclusive with TypeScript enforcement
+  - Useful for testing new models that are released but not yet added to the library's model enum
+
 ## [2.3.0] - 2025-05-28
 
 ### New Features ✨

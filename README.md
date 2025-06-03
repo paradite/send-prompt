@@ -188,6 +188,28 @@ const customResponse = await sendPrompt(
 console.log(openaiResponse.message.content);
 ```
 
+### Custom Models for First Party Providers
+
+The `model` field is an enum of all models supported by the library, this is useful to avoid typos and to get the correct model information.
+
+In case you want to use a model that is not yet available in the enum, you can use `customModel` field instead. This is supported for all first party providers (OpenAI, Anthropic, Google).
+
+```typescript
+// Using custom model string for new models
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, who are you?" }],
+  },
+  {
+    customModel: "gpt-4o-mini", // Custom model string
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+  }
+);
+```
+
+Note that the `model` and `customModel` fields are mutually exclusive.
+
 ### Image Input
 
 You can send images to models that support vision capabilities:
