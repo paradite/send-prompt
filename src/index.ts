@@ -273,7 +273,8 @@ export type BaseURLProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENROUTER
     | typeof AI_PROVIDERS.FIREWORKS
-    | typeof AI_PROVIDERS.DEEPSEEK;
+    | typeof AI_PROVIDERS.DEEPSEEK
+    | typeof AI_PROVIDERS.XAI;
   customModel: string;
   apiKey: string;
 } & HeadersOptions;
@@ -652,7 +653,7 @@ export async function sendPrompt(
 
   // Validate streaming options
   if (stream) {
-    // Support OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, Azure OpenAI, and custom providers for streaming
+    // Support OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, XAI, Azure OpenAI, and custom providers for streaming
     if (
       providerOptions.provider !== AI_PROVIDERS.OPENAI &&
       providerOptions.provider !== AI_PROVIDERS.ANTHROPIC &&
@@ -661,11 +662,12 @@ export async function sendPrompt(
       providerOptions.provider !== AI_PROVIDERS.OPENROUTER &&
       providerOptions.provider !== AI_PROVIDERS.DEEPSEEK &&
       providerOptions.provider !== AI_PROVIDERS.FIREWORKS &&
+      providerOptions.provider !== AI_PROVIDERS.XAI &&
       providerOptions.provider !== AI_PROVIDERS.AZURE_OPENAI &&
       providerOptions.provider !== "custom"
     ) {
       throw new Error(
-        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, Azure OpenAI, and custom providers"
+        "Streaming is only supported for OpenAI, Anthropic, Google, Google Vertex AI, OpenRouter, DeepSeek, Fireworks, XAI, Azure OpenAI, and custom providers"
       );
     }
 
@@ -694,6 +696,9 @@ export async function sendPrompt(
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
   } else if (providerOptions.provider === AI_PROVIDERS.DEEPSEEK) {
+    providerToTransform = AI_PROVIDERS.OPENAI;
+    systemRole = "system";
+  } else if (providerOptions.provider === AI_PROVIDERS.XAI) {
     providerToTransform = AI_PROVIDERS.OPENAI;
     systemRole = "system";
   } else if (providerOptions.provider === AI_PROVIDERS.GOOGLE_VERTEX_AI) {
@@ -1156,7 +1161,8 @@ export async function sendPrompt(
     }
 
     case AI_PROVIDERS.DEEPSEEK:
-    case AI_PROVIDERS.FIREWORKS: {
+    case AI_PROVIDERS.FIREWORKS:
+    case AI_PROVIDERS.XAI: {
       if (!isTransformedOpenAI(transformed)) {
         throw new Error(
           "Messages were not properly transformed for OpenAI-compatible provider"
