@@ -450,10 +450,11 @@ The response from `sendPrompt` follows a standardized format across all provider
   - `promptTokens`: Number of tokens in the input messages
   - `thoughtsTokens`: Number of tokens used for reasoning (if available)
   - `completionTokens`: Number of tokens in the model's response (includes thoughts tokens)
+  - `completionTokensWithoutThoughts`: Number of tokens in the visible output only (excludes reasoning tokens)
   - `totalTokens`: Total tokens used (includes thoughts tokens)
 - `durationMs`: The time taken by the API call in milliseconds
 
-Example response:
+Example response (non-reasoning model):
 
 ```typescript
 {
@@ -463,11 +464,31 @@ Example response:
   },
   usage: {
     completionTokens: 10,
+    completionTokensWithoutThoughts: 10, // Same as completionTokens for non-reasoning models
     promptTokens: 20,
     totalTokens: 30,
     thoughtsTokens: 0
   },
   durationMs: 1234
+}
+```
+
+Example response (reasoning model like XAI's Grok):
+
+```typescript
+{
+  message: {
+    role: "assistant",
+    content: "The answer is 4."
+  },
+  usage: {
+    completionTokens: 150,          // Includes both visible output and reasoning
+    completionTokensWithoutThoughts: 25, // Only the visible output tokens
+    promptTokens: 10,
+    totalTokens: 285,               // May include additional overhead
+    thoughtsTokens: 125             // Internal reasoning tokens
+  },
+  durationMs: 2500
 }
 ```
 

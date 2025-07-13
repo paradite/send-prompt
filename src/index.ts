@@ -225,6 +225,7 @@ export type StandardizedResponse = {
   tool_calls?: FunctionCall[];
   usage?: {
     completionTokens: number;
+    completionTokensWithoutThoughts: number;
     promptTokens: number;
     totalTokens: number;
     thoughtsTokens: number;
@@ -526,11 +527,16 @@ function transformOpenAIResponse(
       total_tokens,
       completion_tokens_details,
     } = response.usage;
+    const thoughtsTokens = completion_tokens_details?.reasoning_tokens || 0;
     standardizedResponse.usage = {
       promptTokens: prompt_tokens,
-      completionTokens: completion_tokens,
+      // completionTokens should include reasoning tokens per README definition
+      completionTokens: completion_tokens + thoughtsTokens,
+      // completionTokensWithoutThoughts excludes reasoning tokens
+      completionTokensWithoutThoughts: completion_tokens,
+      // totalTokens from API already includes all tokens
       totalTokens: total_tokens,
-      thoughtsTokens: completion_tokens_details?.reasoning_tokens || 0,
+      thoughtsTokens: thoughtsTokens,
     };
   }
 
@@ -580,6 +586,8 @@ function transformAnthropicResponse(
     standardizedResponse.usage = {
       promptTokens: input_tokens,
       completionTokens: output_tokens,
+      // For Anthropic, completion tokens are the same with or without thoughts
+      completionTokensWithoutThoughts: output_tokens,
       totalTokens:
         input_tokens +
         (cache_creation_input_tokens || 0) +
@@ -623,14 +631,20 @@ function transformGoogleResponse(
     const {
       promptTokenCount,
       candidatesTokenCount,
-      totalTokenCount,
       thoughtsTokenCount,
     } = response.usageMetadata;
+    const promptTokens = promptTokenCount || 0;
+    const thoughtsTokens = thoughtsTokenCount || 0;
+    const candidatesOnly = candidatesTokenCount || 0;
+    const completionTokens = candidatesOnly + thoughtsTokens;
     standardizedResponse.usage = {
-      promptTokens: promptTokenCount || 0,
-      completionTokens: (candidatesTokenCount || 0) + (thoughtsTokenCount || 0),
-      totalTokens: totalTokenCount || 0,
-      thoughtsTokens: thoughtsTokenCount || 0,
+      promptTokens: promptTokens,
+      completionTokens: completionTokens,
+      // Google's candidatesTokenCount excludes reasoning tokens
+      completionTokensWithoutThoughts: candidatesOnly,
+      // totalTokens should equal promptTokens + completionTokens
+      totalTokens: promptTokens + completionTokens,
+      thoughtsTokens: thoughtsTokens,
     };
   }
 
@@ -785,12 +799,13 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
+          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens,
+            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
+            completionTokensWithoutThoughts: finalUsage.completion_tokens,
             totalTokens: finalUsage.total_tokens,
-            thoughtsTokens:
-              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
@@ -911,6 +926,8 @@ export async function sendPrompt(
           standardizedResponse.usage = {
             promptTokens: input_tokens || 0,
             completionTokens: output_tokens || 0,
+            // For Anthropic, completion tokens are the same with or without thoughts
+            completionTokensWithoutThoughts: output_tokens || 0,
             totalTokens:
               (input_tokens || 0) +
               (cache_creation_input_tokens || 0) +
@@ -1035,15 +1052,20 @@ export async function sendPrompt(
           const {
             promptTokenCount,
             candidatesTokenCount,
-            totalTokenCount,
             thoughtsTokenCount,
           } = finalUsageMetadata;
+          const promptTokens = promptTokenCount || 0;
+          const thoughtsTokens = thoughtsTokenCount || 0;
+          const candidatesOnly = candidatesTokenCount || 0;
+          const completionTokens = candidatesOnly + thoughtsTokens;
           standardizedResponse.usage = {
-            promptTokens: promptTokenCount || 0,
-            completionTokens:
-              (candidatesTokenCount || 0) + (thoughtsTokenCount || 0),
-            totalTokens: totalTokenCount || 0,
-            thoughtsTokens: thoughtsTokenCount || 0,
+            promptTokens: promptTokens,
+            completionTokens: completionTokens,
+            // Google's candidatesTokenCount excludes reasoning tokens
+            completionTokensWithoutThoughts: candidatesOnly,
+            // totalTokens should equal promptTokens + completionTokens
+            totalTokens: promptTokens + completionTokens,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
@@ -1123,12 +1145,13 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
+          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens,
+            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
+            completionTokensWithoutThoughts: finalUsage.completion_tokens,
             totalTokens: finalUsage.total_tokens,
-            thoughtsTokens:
-              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
@@ -1224,12 +1247,13 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
+          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens,
+            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
+            completionTokensWithoutThoughts: finalUsage.completion_tokens,
             totalTokens: finalUsage.total_tokens,
-            thoughtsTokens:
-              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
@@ -1307,12 +1331,13 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
+          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens,
+            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
+            completionTokensWithoutThoughts: finalUsage.completion_tokens,
             totalTokens: finalUsage.total_tokens,
-            thoughtsTokens:
-              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
@@ -1391,12 +1416,13 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
+          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens,
+            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
+            completionTokensWithoutThoughts: finalUsage.completion_tokens,
             totalTokens: finalUsage.total_tokens,
-            thoughtsTokens:
-              finalUsage.completion_tokens_details?.reasoning_tokens || 0,
+            thoughtsTokens: thoughtsTokens,
           };
         }
 
