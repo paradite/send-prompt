@@ -484,7 +484,10 @@ function isTransformedGoogle(
 }
 
 function transformOpenAIResponse(
-  response: OpenAIChatCompletionResponse
+  response: OpenAIChatCompletionResponse,
+  options?: {
+    countThoughtsTokensInCompletionTokens?: boolean;
+  }
 ): Omit<StandardizedResponse, "durationMs"> {
   const message = response.choices[0].message;
   const content = message.content || "";
@@ -528,12 +531,19 @@ function transformOpenAIResponse(
       completion_tokens_details,
     } = response.usage;
     const thoughtsTokens = completion_tokens_details?.reasoning_tokens || 0;
+    // Add thoughtsTokens to completionTokens if countThoughtsTokensInCompletionTokens is true (for most providers we need to do this)
+    // Otherwise, completionTokens is the same as completionTokensWithoutThoughts (for OpenRouter, we need to do this)
+    const countThoughtsTokensInCompletionTokens =
+      options?.countThoughtsTokensInCompletionTokens ?? true;
     standardizedResponse.usage = {
       promptTokens: prompt_tokens,
-      // completionTokens should include reasoning tokens per README definition
-      completionTokens: completion_tokens + thoughtsTokens,
+      completionTokens: countThoughtsTokensInCompletionTokens
+        ? completion_tokens + thoughtsTokens
+        : completion_tokens,
       // completionTokensWithoutThoughts excludes reasoning tokens
-      completionTokensWithoutThoughts: completion_tokens,
+      completionTokensWithoutThoughts: countThoughtsTokensInCompletionTokens
+        ? completion_tokens
+        : completion_tokens - thoughtsTokens,
       // totalTokens from API already includes all tokens
       totalTokens: total_tokens,
       thoughtsTokens: thoughtsTokens,
@@ -628,11 +638,8 @@ function transformGoogleResponse(
   };
 
   if (response.usageMetadata) {
-    const {
-      promptTokenCount,
-      candidatesTokenCount,
-      thoughtsTokenCount,
-    } = response.usageMetadata;
+    const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } =
+      response.usageMetadata;
     const promptTokens = promptTokenCount || 0;
     const thoughtsTokens = thoughtsTokenCount || 0;
     const candidatesOnly = candidatesTokenCount || 0;
@@ -799,7 +806,8 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
-          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
+          const thoughtsTokens =
+            finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
             completionTokens: finalUsage.completion_tokens + thoughtsTokens,
@@ -1049,11 +1057,8 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsageMetadata) {
-          const {
-            promptTokenCount,
-            candidatesTokenCount,
-            thoughtsTokenCount,
-          } = finalUsageMetadata;
+          const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } =
+            finalUsageMetadata;
           const promptTokens = promptTokenCount || 0;
           const thoughtsTokens = thoughtsTokenCount || 0;
           const candidatesOnly = candidatesTokenCount || 0;
@@ -1145,11 +1150,14 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
-          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
+          const thoughtsTokens =
+            finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
-            completionTokens: finalUsage.completion_tokens + thoughtsTokens,
-            completionTokensWithoutThoughts: finalUsage.completion_tokens,
+            // OpenRouter already includes thoughtsTokens in completionTokens
+            completionTokens: finalUsage.completion_tokens,
+            completionTokensWithoutThoughts:
+              finalUsage.completion_tokens - thoughtsTokens,
             totalTokens: finalUsage.total_tokens,
             thoughtsTokens: thoughtsTokens,
           };
@@ -1178,7 +1186,10 @@ export async function sendPrompt(
         //   },
         //   user_id: 'user_xyz'
         // }
-        response = transformOpenAIResponse(openaiResponse);
+        // OpenRouter already includes thoughtsTokens in completionTokens, so we don't need to count them again
+        response = transformOpenAIResponse(openaiResponse, {
+          countThoughtsTokensInCompletionTokens: false,
+        });
       }
       break;
     }
@@ -1247,7 +1258,8 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
-          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
+          const thoughtsTokens =
+            finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
             completionTokens: finalUsage.completion_tokens + thoughtsTokens,
@@ -1331,7 +1343,8 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
-          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
+          const thoughtsTokens =
+            finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
             completionTokens: finalUsage.completion_tokens + thoughtsTokens,
@@ -1416,7 +1429,8 @@ export async function sendPrompt(
 
         // Add usage information if available
         if (finalUsage) {
-          const thoughtsTokens = finalUsage.completion_tokens_details?.reasoning_tokens || 0;
+          const thoughtsTokens =
+            finalUsage.completion_tokens_details?.reasoning_tokens || 0;
           standardizedResponse.usage = {
             promptTokens: finalUsage.prompt_tokens,
             completionTokens: finalUsage.completion_tokens + thoughtsTokens,
