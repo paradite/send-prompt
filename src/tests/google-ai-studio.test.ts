@@ -2,7 +2,7 @@ import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
 // const googleModel = ModelEnum["gemini-2.5-pro-exp-03-25"];
-const googleModel = ModelEnum["gemini-2.5-flash-preview-04-17"];
+const googleModel = ModelEnum["gemini-2.5-flash"];
 
 describe("Google Provider", () => {
   // Skip test if GEMINI_API_KEY is not set
