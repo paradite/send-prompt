@@ -40,6 +40,9 @@ describe("OpenRouter Reasoning Extraction", () => {
       expect(response.message.content).toBeTruthy();
       expect(response.reasoning).toBeTruthy();
       expect(response.usage?.thoughtsTokens).toBeGreaterThan(0);
+      expect(response.usage?.completionTokensWithoutThoughts).toBeGreaterThan(
+        0
+      );
       expect(response.message.content).not.toContain("<think>");
       expect(response.message.content).not.toContain("</think>");
       expect(response.usage).toBeDefined();
@@ -49,6 +52,15 @@ describe("OpenRouter Reasoning Extraction", () => {
       expect(response.usage?.totalTokens).toBe(
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
+      );
+      // completionTokens should include reasoning tokens
+      expect(response.usage?.completionTokens).toBeGreaterThanOrEqual(
+        response.usage?.thoughtsTokens || 0
+      );
+      // For tag-extracted reasoning, validate the relationship
+      expect(response.usage?.completionTokens).toBe(
+        (response.usage?.completionTokensWithoutThoughts || 0) +
+          (response.usage?.thoughtsTokens || 0)
       );
     },
     30000

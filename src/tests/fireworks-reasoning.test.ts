@@ -38,9 +38,20 @@ describe("Fireworks Reasoning Extraction", () => {
       expect(response.usage?.promptTokens).toBeGreaterThan(0);
       expect(response.usage?.completionTokens).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBeGreaterThan(0);
+      expect(response.usage?.thoughtsTokens).toBeGreaterThanOrEqual(0);
+      expect(response.usage?.completionTokensWithoutThoughts).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBe(
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
+      );
+      // completionTokens should include reasoning tokens
+      expect(response.usage?.completionTokens).toBeGreaterThanOrEqual(
+        response.usage?.thoughtsTokens || 0
+      );
+      // For tag-extracted reasoning, validate the relationship
+      expect(response.usage?.completionTokens).toBe(
+        (response.usage?.completionTokensWithoutThoughts || 0) +
+          (response.usage?.thoughtsTokens || 0)
       );
       console.log("Fireworks Response:", response.message.content);
       console.log("Fireworks Reasoning:", response.reasoning);

@@ -42,11 +42,23 @@ describe("OpenRouter Provider - Gemini Model", () => {
       expect(response.usage?.promptTokens).toBeGreaterThan(0);
       expect(response.reasoning).toBeTruthy();
       expect(response.usage?.thoughtsTokens).toBeGreaterThan(0);
+      expect(response.usage?.completionTokensWithoutThoughts).toBeGreaterThan(
+        0
+      );
       expect(response.usage?.completionTokens).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBe(
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
+      );
+      // completionTokens should include reasoning tokens
+      expect(response.usage?.completionTokens).toBeGreaterThanOrEqual(
+        response.usage?.thoughtsTokens || 0
+      );
+      // For Google reasoning, validate the relationship
+      expect(response.usage?.completionTokens).toBe(
+        (response.usage?.completionTokensWithoutThoughts || 0) +
+          (response.usage?.thoughtsTokens || 0)
       );
     },
     30000

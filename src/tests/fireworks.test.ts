@@ -29,9 +29,19 @@ describe("Fireworks Provider", () => {
       expect(response.usage?.promptTokens).toBeGreaterThan(0);
       expect(response.usage?.completionTokens).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBeGreaterThan(0);
+      expect(response.usage?.thoughtsTokens).toBeGreaterThanOrEqual(0);
+      expect(response.usage?.completionTokensWithoutThoughts).toBeGreaterThan(0);
       expect(response.usage?.totalTokens).toBe(
         (response.usage?.promptTokens || 0) +
           (response.usage?.completionTokens || 0)
+      );
+      // completionTokens should include reasoning tokens
+      expect(response.usage?.completionTokens).toBeGreaterThanOrEqual(
+        response.usage?.thoughtsTokens || 0
+      );
+      // For non-reasoning models, both completion token fields should be equal
+      expect(response.usage?.completionTokens).toBe(
+        response.usage?.completionTokensWithoutThoughts
       );
       console.log("Fireworks Response:", response.message.content);
       console.log("Fireworks Usage:", response.usage);
@@ -56,9 +66,19 @@ describe("Fireworks Provider", () => {
       expect(systemPromptResponse.usage?.promptTokens).toBeGreaterThan(0);
       expect(systemPromptResponse.usage?.completionTokens).toBeGreaterThan(0);
       expect(systemPromptResponse.usage?.totalTokens).toBeGreaterThan(0);
+      expect(systemPromptResponse.usage?.thoughtsTokens).toBeGreaterThanOrEqual(0);
+      expect(systemPromptResponse.usage?.completionTokensWithoutThoughts).toBeGreaterThan(0);
       expect(systemPromptResponse.usage?.totalTokens).toBe(
         (systemPromptResponse.usage?.promptTokens || 0) +
           (systemPromptResponse.usage?.completionTokens || 0)
+      );
+      // completionTokens should include reasoning tokens
+      expect(systemPromptResponse.usage?.completionTokens).toBeGreaterThanOrEqual(
+        systemPromptResponse.usage?.thoughtsTokens || 0
+      );
+      // For non-reasoning models, both completion token fields should be equal
+      expect(systemPromptResponse.usage?.completionTokens).toBe(
+        systemPromptResponse.usage?.completionTokensWithoutThoughts
       );
       console.log(
         "Fireworks System Prompt Response:",
