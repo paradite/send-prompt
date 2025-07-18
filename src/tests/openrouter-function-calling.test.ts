@@ -3,7 +3,7 @@ import { AI_PROVIDERS } from "llm-info";
 import { calculatorTool } from "./shared/tools";
 
 // const openRouterModel = "meta-llama/llama-4-scout:free";
-const openRouterModel = "google/gemini-2.5-flash-preview";
+const openRouterModel = "google/gemini-2.5-flash";
 
 describe("OpenRouter Function Calling", () => {
   // Skip test if OPENROUTER_API_KEY is not set

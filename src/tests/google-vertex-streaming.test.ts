@@ -1,7 +1,7 @@
 import { sendPrompt } from "../index";
 import { AI_PROVIDERS, ModelEnum } from "llm-info";
 
-const googleModel = ModelEnum["gemini-2.5-flash-preview-04-17"];
+const googleModel = ModelEnum["gemini-2.5-flash"];
 
 describe("Google Vertex AI Streaming", () => {
   // Skip test if Google Cloud credentials are not set

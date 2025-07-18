@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 
-const openRouterModel = "meta-llama/llama-4-scout:free";
+const openRouterModel = "meta-llama/llama-4-scout";
 
 // Get the directory name using import.meta.url
 const __filename = fileURLToPath(import.meta.url);

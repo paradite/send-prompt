@@ -270,6 +270,12 @@ export type FirstPartyProviderOptions = {
     | { model?: never; customModel: string }
   );
 
+export type OpenRouterProviderOptions = {
+  order?: string[];
+  only?: string[];
+  ignore?: string[];
+};
+
 export type BaseURLProviderOptions = {
   provider:
     | typeof AI_PROVIDERS.OPENROUTER
@@ -278,7 +284,13 @@ export type BaseURLProviderOptions = {
     | typeof AI_PROVIDERS.XAI;
   customModel: string;
   apiKey: string;
-} & HeadersOptions;
+} & HeadersOptions &
+  (
+    | { provider: typeof AI_PROVIDERS.OPENROUTER; providerOptions?: OpenRouterProviderOptions }
+    | { provider: typeof AI_PROVIDERS.FIREWORKS; providerOptions?: never }
+    | { provider: typeof AI_PROVIDERS.DEEPSEEK; providerOptions?: never }
+    | { provider: typeof AI_PROVIDERS.XAI; providerOptions?: never }
+  );
 
 export type CustomProviderOptions = {
   provider: "custom";
@@ -1112,6 +1124,9 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
+        ...(providerOptions.provider === AI_PROVIDERS.OPENROUTER && providerOptions.providerOptions 
+          ? { provider: providerOptions.providerOptions }
+          : {}),
       };
 
       if (stream && onStreamingContent) {
