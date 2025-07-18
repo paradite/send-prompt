@@ -406,6 +406,82 @@ if (response.reasoning) {
 }
 ```
 
+#### OpenRouter Provider Options
+
+For OpenRouter, you can control provider routing using the `providerOptions` field. This allows you to specify which providers to use, their order, and which ones to avoid:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Hello, world!" }],
+  },
+  {
+    provider: AI_PROVIDERS.OPENROUTER,
+    customModel: "openai/gpt-4o-mini",
+    apiKey: "your-openrouter-api-key",
+    providerOptions: {
+      // Specify the order of providers to try
+      order: ["openai", "azure"],
+      
+      // Only allow specific providers
+      only: ["openai", "azure"],
+      
+      // Ignore specific providers
+      ignore: ["fireworks"],
+    },
+  }
+);
+```
+
+**Available Provider Options:**
+
+- `order`: Array of provider slugs to try in order (e.g., `["openai", "azure"]`)
+- `only`: Array of provider slugs to allow for this request (e.g., `["openai"]`)
+- `ignore`: Array of provider slugs to skip for this request (e.g., `["fireworks"]`)
+
+You can use these options individually or combine them:
+
+```typescript
+// Use only the order preference
+const orderResponse = await sendPrompt(
+  { messages: [{ role: "user", content: "Hello!" }] },
+  {
+    provider: AI_PROVIDERS.OPENROUTER,
+    customModel: "openai/gpt-4o-mini",
+    apiKey: "your-api-key",
+    providerOptions: {
+      order: ["openai", "azure"]
+    }
+  }
+);
+
+// Restrict to specific providers only
+const restrictedResponse = await sendPrompt(
+  { messages: [{ role: "user", content: "Hello!" }] },
+  {
+    provider: AI_PROVIDERS.OPENROUTER,
+    customModel: "openai/gpt-4o-mini", 
+    apiKey: "your-api-key",
+    providerOptions: {
+      only: ["openai"]
+    }
+  }
+);
+
+// Ignore certain providers
+const filteredResponse = await sendPrompt(
+  { messages: [{ role: "user", content: "Hello!" }] },
+  {
+    provider: AI_PROVIDERS.OPENROUTER,
+    customModel: "meta-llama/llama-3.1-8b-instruct",
+    apiKey: "your-api-key",
+    providerOptions: {
+      ignore: ["fireworks", "together"]
+    }
+  }
+);
+```
+
 ### Streaming
 
 You can stream responses from supported providers to get real-time content as it's generated. Streaming is supported for all providers.
