@@ -2,6 +2,22 @@
 
 All notable changes to [send-prompt](https://github.com/paradite/send-prompt).
 
+## [2.7.0] - 2025-07-18
+
+### New Features ✨
+
+- Support for OpenRouter provider options: `order`, `only`, and `ignore`
+
+## [2.6.0] - 2025-07-13
+
+### New Features ✨
+
+- Support for XAI (X.AI) provider
+
+### Bug Fixes 🐛
+
+- Fixed OpenRouter reasoning token counting
+
 ## [2.4.0] - 2025-06-03
 
 ### New Features ✨
