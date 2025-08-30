@@ -363,6 +363,42 @@ const deterministicResponse = await sendPrompt(
 
 The temperature parameter is supported across all providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek, Azure OpenAI, and custom providers). If not specified, each provider will use its default temperature value.
 
+#### Reasoning Effort (OpenAI)
+
+For OpenAI's reasoning models (like GPT-5), you can control the level of reasoning effort using the `reasoningEffort` parameter. This parameter allows you to balance between speed and thoroughness:
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [{ role: "user", content: "Solve this complex math problem step by step: What is the derivative of x^2 * sin(x)?" }],
+  },
+  {
+    model: ModelEnum["gpt-5"],
+    provider: AI_PROVIDERS.OPENAI,
+    apiKey: "your-openai-api-key",
+    reasoningEffort: "high", // "low" | "medium" | "high"
+  }
+);
+
+// The response will include reasoning tokens if the model supports it
+if (response.usage?.thoughtsTokens && response.usage.thoughtsTokens > 0) {
+  console.log("Model used", response.usage.thoughtsTokens, "reasoning tokens");
+}
+```
+
+**Available reasoning effort levels:**
+
+- `"low"`: Faster responses with less thorough reasoning
+- `"medium"`: Balanced approach (default when not specified)  
+- `"high"`: More thorough reasoning, potentially slower responses
+
+**Important notes:**
+
+- This parameter only works with OpenAI's reasoning models (like GPT-5)
+- Using `reasoningEffort` with non-reasoning models (like GPT-4) will result in an API error
+- Other providers will ignore this parameter silently
+- Higher reasoning effort may result in more `thoughtsTokens` in the usage statistics
+
 #### Anthropic Max Tokens
 
 For Anthropic models, you can control the maximum number of tokens in the response using the `anthropicMaxTokens` option:
