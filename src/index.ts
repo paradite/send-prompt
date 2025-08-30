@@ -264,6 +264,7 @@ export type FirstPartyProviderOptions = {
     | typeof AI_PROVIDERS.ANTHROPIC
     | typeof AI_PROVIDERS.GOOGLE;
   apiKey: string;
+  reasoningEffort?: "low" | "medium" | "high";
 } & HeadersOptions &
   (
     | { model: ModelEnum; customModel?: never }
@@ -780,6 +781,7 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
+        ...(providerOptions.reasoningEffort !== undefined ? { reasoning_effort: providerOptions.reasoningEffort } : {}),
       };
 
       if (stream && onStreamingContent) {

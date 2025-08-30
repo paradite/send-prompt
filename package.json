@@ -37,7 +37,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.50.3",
     "@google/genai": "^1.3.0",
-    "llm-info": "^1.0.54",
+    "llm-info": "^1.0.68",
     "openai": "^4.98.0"
   },
   "devDependencies": {
