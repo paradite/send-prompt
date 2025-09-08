@@ -285,6 +285,7 @@ export type BaseURLProviderOptions = {
     | typeof AI_PROVIDERS.XAI;
   customModel: string;
   apiKey: string;
+  reasoningEffort?: "low" | "medium" | "high";
 } & HeadersOptions &
   (
     | { provider: typeof AI_PROVIDERS.OPENROUTER; providerOptions?: OpenRouterProviderOptions }
@@ -1129,6 +1130,7 @@ export async function sendPrompt(
         ...(providerOptions.provider === AI_PROVIDERS.OPENROUTER && providerOptions.providerOptions 
           ? { provider: providerOptions.providerOptions }
           : {}),
+        ...(providerOptions.reasoningEffort !== undefined ? { reasoning: { effort: providerOptions.reasoningEffort } } : {}),
       };
 
       if (stream && onStreamingContent) {

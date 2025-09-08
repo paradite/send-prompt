@@ -363,14 +363,22 @@ const deterministicResponse = await sendPrompt(
 
 The temperature parameter is supported across all providers (OpenAI, Anthropic, Google, OpenRouter, Fireworks, DeepSeek, Azure OpenAI, and custom providers). If not specified, each provider will use its default temperature value.
 
-#### Reasoning Effort (OpenAI)
+#### Reasoning Effort
 
-For OpenAI's reasoning models (like GPT-5), you can control the level of reasoning effort using the `reasoningEffort` parameter. This parameter allows you to balance between speed and thoroughness:
+You can control the level of reasoning effort for supported models using the `reasoningEffort` parameter. This parameter allows you to balance between speed and thoroughness:
+
+**OpenAI (Direct):**
 
 ```typescript
 const response = await sendPrompt(
   {
-    messages: [{ role: "user", content: "Solve this complex math problem step by step: What is the derivative of x^2 * sin(x)?" }],
+    messages: [
+      {
+        role: "user",
+        content:
+          "Solve this complex math problem step by step: What is the derivative of x^2 * sin(x)?",
+      },
+    ],
   },
   {
     model: ModelEnum["gpt-5"],
@@ -386,18 +394,52 @@ if (response.usage?.thoughtsTokens && response.usage.thoughtsTokens > 0) {
 }
 ```
 
+**OpenRouter (for reasoning models like GPT-5):**
+
+```typescript
+const response = await sendPrompt(
+  {
+    messages: [
+      {
+        role: "user",
+        content:
+          "A farmer has 17 sheep, and all but 9 die. How many sheep are left?",
+      },
+    ],
+  },
+  {
+    customModel: "openai/gpt-5-mini",
+    provider: AI_PROVIDERS.OPENROUTER,
+    apiKey: "your-openrouter-api-key",
+    reasoningEffort: "medium", // "low" | "medium" | "high"
+    headers: {
+      "HTTP-Referer": "https://your-app.com/",
+      "X-Title": "Your App Name",
+    },
+  }
+);
+
+// OpenRouter also supports reasoning tokens
+console.log("Reasoning tokens:", response.usage?.thoughtsTokens);
+```
+
 **Available reasoning effort levels:**
 
 - `"low"`: Faster responses with less thorough reasoning
-- `"medium"`: Balanced approach (default when not specified)  
+- `"medium"`: Balanced approach (default when not specified)
 - `"high"`: More thorough reasoning, potentially slower responses
+
+**Supported providers and models:**
+
+- **OpenAI**: o series models and GPT-5 models only
+- **OpenRouter**: o series models and GPT-5 models only (e.g., `openai/gpt-5-mini`)
 
 **Important notes:**
 
-- This parameter only works with OpenAI's reasoning models (like GPT-5)
-- Using `reasoningEffort` with non-reasoning models (like GPT-4) will result in an API error
-- Other providers will ignore this parameter silently
+- This parameter only works with o series models and GPT-5 models
+- Using `reasoningEffort` with other models may result in an API error or be ignored
 - Higher reasoning effort may result in more `thoughtsTokens` in the usage statistics
+- For OpenRouter, the reasoning effort is passed through their unified reasoning API to o series models and GPT-5 models
 
 #### Anthropic Max Tokens
 
@@ -458,10 +500,10 @@ const response = await sendPrompt(
     providerOptions: {
       // Specify the order of providers to try
       order: ["openai", "azure"],
-      
+
       // Only allow specific providers
       only: ["openai", "azure"],
-      
+
       // Ignore specific providers
       ignore: ["fireworks"],
     },
@@ -486,8 +528,8 @@ const orderResponse = await sendPrompt(
     customModel: "openai/gpt-4o-mini",
     apiKey: "your-api-key",
     providerOptions: {
-      order: ["openai", "azure"]
-    }
+      order: ["openai", "azure"],
+    },
   }
 );
 
@@ -496,11 +538,11 @@ const restrictedResponse = await sendPrompt(
   { messages: [{ role: "user", content: "Hello!" }] },
   {
     provider: AI_PROVIDERS.OPENROUTER,
-    customModel: "openai/gpt-4o-mini", 
+    customModel: "openai/gpt-4o-mini",
     apiKey: "your-api-key",
     providerOptions: {
-      only: ["openai"]
-    }
+      only: ["openai"],
+    },
   }
 );
 
@@ -512,8 +554,8 @@ const filteredResponse = await sendPrompt(
     customModel: "meta-llama/llama-3.1-8b-instruct",
     apiKey: "your-api-key",
     providerOptions: {
-      ignore: ["fireworks", "together"]
-    }
+      ignore: ["fireworks", "together"],
+    },
   }
 );
 ```
