@@ -1335,7 +1335,7 @@ export async function sendPrompt(
         })),
         ...(temperature !== undefined ? { temperature } : {}),
         ...(customMaxTokens !== undefined
-          ? { maxTokens: customMaxTokens }
+          ? { max_tokens: customMaxTokens }
           : {}),
       };
 
