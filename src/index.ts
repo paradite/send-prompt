@@ -248,6 +248,7 @@ export type PromptOptions = {
   tools?: FunctionDefinition[];
   toolCallMode?: "ANY" | "AUTO";
   anthropicMaxTokens?: number;
+  customMaxTokens?: number;
   temperature?: number;
   // Streaming options
   stream?: boolean;
@@ -288,7 +289,10 @@ export type BaseURLProviderOptions = {
   reasoningEffort?: "low" | "medium" | "high";
 } & HeadersOptions &
   (
-    | { provider: typeof AI_PROVIDERS.OPENROUTER; providerOptions?: OpenRouterProviderOptions }
+    | {
+        provider: typeof AI_PROVIDERS.OPENROUTER;
+        providerOptions?: OpenRouterProviderOptions;
+      }
     | { provider: typeof AI_PROVIDERS.FIREWORKS; providerOptions?: never }
     | { provider: typeof AI_PROVIDERS.DEEPSEEK; providerOptions?: never }
     | { provider: typeof AI_PROVIDERS.XAI; providerOptions?: never }
@@ -684,6 +688,7 @@ export async function sendPrompt(
     temperature,
     stream,
     onStreamingContent,
+    customMaxTokens,
   } = promptOptions;
 
   // Validate streaming options
@@ -782,7 +787,9 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
-        ...(providerOptions.reasoningEffort !== undefined ? { reasoning_effort: providerOptions.reasoningEffort } : {}),
+        ...(providerOptions.reasoningEffort !== undefined
+          ? { reasoning_effort: providerOptions.reasoningEffort }
+          : {}),
       };
 
       if (stream && onStreamingContent) {
@@ -1127,10 +1134,13 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
-        ...(providerOptions.provider === AI_PROVIDERS.OPENROUTER && providerOptions.providerOptions 
+        ...(providerOptions.provider === AI_PROVIDERS.OPENROUTER &&
+        providerOptions.providerOptions
           ? { provider: providerOptions.providerOptions }
           : {}),
-        ...(providerOptions.reasoningEffort !== undefined ? { reasoning: { effort: providerOptions.reasoningEffort } } : {}),
+        ...(providerOptions.reasoningEffort !== undefined
+          ? { reasoning: { effort: providerOptions.reasoningEffort } }
+          : {}),
       };
 
       if (stream && onStreamingContent) {
@@ -1324,6 +1334,9 @@ export async function sendPrompt(
           function: tool.function,
         })),
         ...(temperature !== undefined ? { temperature } : {}),
+        ...(customMaxTokens !== undefined
+          ? { maxTokens: customMaxTokens }
+          : {}),
       };
 
       if (stream && onStreamingContent) {
